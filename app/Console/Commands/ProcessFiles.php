@@ -3,9 +3,8 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use DB;
-use Log;
-
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 class ProcessFiles extends Command
 {
     protected $signature = 'files:process';
