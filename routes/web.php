@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\EmailCleanerController;
 use App\Http\Controllers\FileController;
 use Illuminate\Support\Facades\Auth;
 
@@ -24,9 +23,6 @@ Route::get('/', function () {
 Auth::routes(['register'=>false]);
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
-
-// bulk validate email on debounce
-Route::get('/bulk-validate', [EmailCleanerController::class, 'bulkValidate'])->middleware('auth'); // Using the auth middleware to ensure only logged-in users can access.
 
 // uplaod
 Route::get('/upload', [FileController::class, 'uploadView'])->name('upload.view')->middleware('auth');  // Using the auth middleware to ensure only logged-in users can access.

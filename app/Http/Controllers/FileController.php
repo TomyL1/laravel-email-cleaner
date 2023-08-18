@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\File;  // Make sure you have a File model that corresponds to your files table.
+use Illuminate\Support\Facades\DB;
 
 class FileController extends Controller
 {
@@ -27,12 +28,19 @@ class FileController extends Controller
             $checksum = md5_file($request->file('file')->getRealPath());
 
             // Store file details in the database
-            File::create([
+            $file = File::create([
                 'instance_name' => $request->input('instance_name'),  // Adjust this if you have another method for naming.
                 'file_path' => $path,
                 'size' => $request->file('file')->getSize(),
                 'uploaded_at' => now(),
                 'checksum' => $checksum,
+            ]);
+
+            // Insert a new record into 'processing_statuses' table with a status of 'pending'.
+            DB::table('processing_statuses')->insert([
+                'file_id' => $file->id,
+                'status' => 'pending',
+                'created_at' => now(),
             ]);
 
 

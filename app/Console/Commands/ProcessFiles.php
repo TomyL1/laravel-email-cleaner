@@ -10,15 +10,106 @@ class ProcessFiles extends Command
     protected $signature = 'files:process';
     protected $description = 'Process files through DeBounce';
 
-    public function handle()
-    {
-        $processingFile = DB::table('processing_statuses')->where('status', 'processing')->first();
+    public function handle() {
+        // Check and update status of files already sent for processing
+        $this->checkProcessedFilesStatus();
 
-        if ($processingFile) {
-            $this->info("Another file is currently being processed. Exiting...");
-            return;
+        // Check if any files are currently processing
+        $processingCount = DB::table('processing_statuses')->where('status', 'processing')->count();
+        if ($processingCount === 0) {
+            // Send new pending files to DeBounce for processing
+            $this->sendPendingFilesToDebounce();
         }
+    }
 
+    protected function checkProcessedFilesStatus()
+    {
+        // Here, fetch all files with 'processing' status and have a list_id
+        $processingFiles = DB::table('processing_statuses')->where('status', 'processing')->whereNotNull('list_id')->get();
+
+        foreach ($processingFiles as $file) {
+            $response = $this->fetchStatusFromDebounce($file->list_id);
+            $success = $response->success;
+            $status = $response->debounce->status;
+
+            if ($success === '1') {
+                if ($status === 'completed') {
+                    // Here, also update the download_link if you can fetch it from DeBounce
+                    DB::table('processing_statuses')->where('id', $file->id)->update([
+                        'status' => 'completed',
+                        'download_link' => $response->debounce->download_link
+                    ]);
+
+                    Log::info("File processing completed" . ' - File_id:' . $file->list_id);
+                    $this->info("File processing completed" . ' - File_id:' . $file->list_id);
+
+                } elseif ($status === 'preparing') {
+                    Log::info("File processing preparing" . ' - File_id:' . $file->list_id);
+                    $this->info("File processing preparing" . ' - File_id:' . $file->list_id);
+
+                } elseif ($status === 'processing') {
+                    Log::info("File processing processing" . ' - File_id:' . $file->list_id);
+                    $this->info("File processing processing" . ' - File_id:' . $file->list_id);
+
+                } else {
+                    Log::info("Unknown status" . ' - File_id:' . $file->list_id . ' - Response: ' . json_encode($response));
+                    $this->info("Unknown status" . ' - File_id:' . $file->list_id . ' - Response: ' . json_encode($response));
+                }
+
+            } elseif ($success === '0') {
+
+                if (isset($status->debounce->error)) {
+                    $error = $status->debounce->error;
+
+                    DB::table('processing_statuses')->where('id', $file->id)->update([
+                        'status' => 'error',
+                        'response' => $error
+                    ]);
+                    Log::error("Error fetching status from DeBounce: " . $error);
+                    $this->error("Error fetching status from DeBounce: " . $error);
+                } else {
+                    $error = "Unknown error";
+
+                    DB::table('processing_statuses')->where('id', $file->id)->update([
+                        'status' => 'error',
+                        'response' => $error
+                    ]);
+                    Log::error("Unknown error" . '- File_id:' . $file->list_id);
+                    $this->error("Unknown error" . '- File_id:' . $file->list_id);
+                }
+            } else {
+                Log::error("Unknown error - no response from server at all" . '- File_id:' . $file->list_id);
+            }
+        }
+    }
+
+    protected function fetchStatusFromDebounce($listId)
+    {
+        $client = new \GuzzleHttp\Client();
+
+        try {
+            $response = $client->request('GET', 'https://bulk.debounce.io/v1/status/', [
+                'headers' => [
+                    'accept' => 'application/json',
+                ],
+                'query' => [
+                    'api' => env('DEBOUNCE_API_KEY'),
+                    'list_id' => $listId
+                ]
+            ]);
+
+            // Decode JSON response and return as an object
+            return json_decode($response->getBody()->getContents());
+
+        } catch (\GuzzleHttp\Exception\RequestException $e) {
+            // You can log the error or handle it as per your application's requirements
+            Log::error("Error fetching status from DeBounce: " . $e->getMessage());
+
+            return null;  // or you can return a default response structure indicating an error
+        }
+    }
+
+    protected function sendPendingFilesToDebounce() {
         $nextFile = DB::table('processing_statuses')->where('status', 'pending')->first();
 
         if (!$nextFile) {
@@ -26,47 +117,40 @@ class ProcessFiles extends Command
             return;
         }
 
-        DB::table('processing_statuses')->where('id', $nextFile->id)->update(['status' => 'processing']);
-
         $responseData = $this->sendToDebounce($nextFile->file_id);
 
-        if ($responseData->success == "1") {
+        if ($responseData->success == "1" && isset($responseData->debounce->list_id)) {
             DB::table('processing_statuses')->where('id', $nextFile->id)->update([
+                'status' => 'processing',
                 'list_id' => $responseData->debounce->list_id
             ]);
-
-            if ($responseData->debounce->status === "completed") {
-                DB::table('processing_statuses')->where('id', $nextFile->id)->update([
-                    'status' => 'completed',
-                    'download_link' => $responseData->debounce->download_link
-                ]);
-            } else if ($responseData->debounce->status === "processing") {
-                // You might want to introduce another mechanism to frequently check the status using the list_id until processing is complete
-                $this->info("File is still being processed.");
-            }
-        } else if ($responseData->success == "0") {
-            if (isset($responseData->debounce->error)) {
-                DB::table('processing_statuses')->where('id', $nextFile->id)->update([
-                    'status' => 'error',
-                    'response' => $responseData->debounce->error
-                ]);
-            } else {
-                DB::table('processing_statuses')->where('id', $nextFile->id)->update([
-                    'status' => 'error',
-                ]);
-            }
+            Log::info("File sent for processing. Will check status on next run.");
+            $this->info("File sent for processing. Will check status on next run.");
         } else {
-            // If there is no success key in the response, we handle it as an error for simplicity
-            DB::table('processing_statuses')->where('id', $nextFile->id)->update([
-                'status' => 'error'
-            ]);
+            if ($responseData->success == "0") {
+
+                if (isset($responseData->debounce->error)) {
+                    $error = $responseData->debounce->error;
+                } else {
+                    $error = "Unknown error";
+                }
+
+                DB::table('processing_statuses')->where('id', $nextFile->id)->update([
+                    'status' => 'error',
+                    'response' => $error
+                ]);
+                Log::error("Error sending file to DeBounce: " . $error);
+                $this->error("Error sending file to DeBounce: " . $error);
+            }
         }
     }
 
     protected function sendToDebounce($fileId)
     {
         $file = DB::table('cl_upload_files')->where('id', $fileId)->first();
-        $fileUrl = "https://catalyst.sk/uploads/" . $file->file_path;
+        $fileUrl = "https://catalyst.sk/" . $file->file_path;
+
+        Log::info('Sending file to DeBounce:', ['fileUrl' => $fileUrl]);
 
         $client = new \GuzzleHttp\Client();
 
@@ -77,7 +161,7 @@ class ProcessFiles extends Command
                 ],
                 'query' => [
                     'url' => $fileUrl,
-                    'api' => '5dadcc1b65140',
+                    'api' => env('DEBOUNCE_API_KEY')
                 ],
             ]);
 
