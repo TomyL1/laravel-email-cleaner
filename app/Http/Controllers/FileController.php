@@ -35,6 +35,7 @@ class FileController extends Controller
                 'checksum' => $checksum,
             ]);
 
+
             return back()->with('success', 'File uploaded successfully!');  // Redirect back to the upload form with a success message.
         } catch (\Exception $e) {
             return back()->with('error', 'Error uploading file!');  // Redirect back to the upload form with an error message.
