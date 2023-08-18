@@ -2,39 +2,32 @@
 
 @section('content')
     <div class="container">
-        <h1 class="mb-4">DeBounce Dashboard</h1>
-
-        {{-- Pending Files --}}
-        <h2>Pending Files</h2>
-        <ul>
-            @foreach($pendingFiles as $file)
-                <li>{{ $file->filename }} - {{ $file->created_at }}</li>
+        <h2>Files Dashboard</h2>
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Filename</th>
+                <th>Upload Date</th>
+                <th>Status</th>
+                <!-- Add any other relevant columns here -->
+            </tr>
+            </thead>
+            <tbody>
+            @foreach($files as $file)
+                <tr>
+                    <td>
+                        {{ $file->file_path }}
+                        @if ($file->status == 'completed')
+                            <br />
+                            <a href="{{ $file->download_link }}">Download</a>
+                        @endif
+                    </td>  <!-- You might want to extract just the filename instead of the full path -->
+                    <td>{{ $file->uploaded_at }}</td>
+                    <td>{{ $file->status }}</td>
+                </tr>
             @endforeach
-        </ul>
-
-        {{-- Processing Files --}}
-        <h2>Processing Files</h2>
-        <ul>
-            @foreach($processingFiles as $file)
-                <li>{{ $file->filename }} - {{ $file->created_at }}</li>
-            @endforeach
-        </ul>
-
-        {{-- Completed Files --}}
-        <h2>Completed Files</h2>
-        <ul>
-            @foreach($completedFiles as $file)
-                <li>{{ $file->filename }} - {{ $file->created_at }} - <a href="{{ $file->download_link }}">Download</a></li>
-            @endforeach
-        </ul>
-
-        {{-- Error Files --}}
-        <h2>Error Logs</h2>
-        <ul>
-            @foreach($errorFiles as $file)
-                <li>{{ $file->filename }} - {{ $file->created_at }} - Error: {{ $file->response }}</li>
-            @endforeach
-        </ul>
-
+            </tbody>
+        </table>
+        {{ $files->links() }} <!-- This will render pagination links -->
     </div>
 @endsection

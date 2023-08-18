@@ -13,6 +13,17 @@ class FileController extends Controller
         return view('upload');  // Returns the upload form view.
     }
 
+    public function dashboard()
+    {
+        $files = DB::table('cl_upload_files')
+            ->leftJoin('processing_statuses', 'cl_upload_files.id', '=', 'processing_statuses.file_id')
+            ->orderBy('cl_upload_files.uploaded_at', 'desc')
+            ->paginate(10);
+
+        return view('dashboard', ['files' => $files]);
+    }
+
+
     public function store(Request $request)
     {
         try {
