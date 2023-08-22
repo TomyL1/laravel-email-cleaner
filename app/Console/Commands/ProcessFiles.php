@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 class ProcessFiles extends Command
 {
     protected $signature = 'files:process';
@@ -35,13 +36,25 @@ class ProcessFiles extends Command
             if ($success === '1') {
                 if ($status === 'completed') {
                     // Here, also update the download_link if you can fetch it from DeBounce
-                    DB::table('processing_statuses')->where('id', $file->id)->update([
-                        'status' => 'completed',
-                        'download_link' => $response->debounce->download_link
-                    ]);
+                    $downloadLink = $response->debounce->download_link;
 
-                    Log::info("File processing completed" . ' - File_id:' . $file->list_id);
-                    $this->info("File processing completed" . ' - File_id:' . $file->list_id);
+                    $downloadFilePath = $this->downloadFile($downloadLink, $file->id);
+
+                    if ($downloadLink) {
+                        DB::table('processing_statuses')->where('id', $file->id)->update([
+                            'status' => 'completed',
+                            'download_link' => $downloadLink,
+                            'download_file_path' => $downloadFilePath
+                        ]);
+
+                        Log::info("File processing completed" . ' - File_id:' . $file->list_id);
+                        $this->info("File processing completed" . ' - File_id:' . $file->list_id);
+
+                    } else {
+                        Log::error("Download link missing" . ' - File_id:' . $file->list_id);
+                        $this->error("Download link missing" . ' - File_id:' . $file->list_id);
+                    }
+
 
                 } elseif ($status === 'preparing') {
                     Log::info("File processing preparing" . ' - File_id:' . $file->list_id);
@@ -80,6 +93,27 @@ class ProcessFiles extends Command
             } else {
                 Log::error("Unknown error - no response from server at all" . '- File_id:' . $file->list_id);
             }
+        }
+    }
+
+    protected function downloadFile($downloadLink, $fileId)
+    {
+        $client = new \GuzzleHttp\Client();
+
+        try {
+            $response = $client->get($downloadLink);
+
+            $downloadedFilePath = 'downloads/' . $fileId . '.csv';
+            Storage::put($downloadedFilePath, $response->getBody());
+
+            return $downloadedFilePath;
+
+        } catch (\GuzzleHttp\Exception\RequestException $e) {
+            // You can log the error or handle it as per your application's requirements
+            Log::error("Error fetching status from DeBounce: " . $e->getMessage());
+            $this->error("Error fetching status from DeBounce: " . $e->getMessage());
+
+            return null;  // or you can return a default response structure indicating an error
         }
     }
 

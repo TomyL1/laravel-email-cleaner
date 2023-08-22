@@ -17,9 +17,9 @@ use App\Http\Controllers\FileController;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
-});
+//Route::get('/', function () {
+//    return view('welcome');
+//});
 
 Auth::routes(['register'=>false]);
 
@@ -30,7 +30,7 @@ Route::get('/upload', [FileController::class, 'uploadView'])->name('upload.view'
 Route::post('/upload', [FileController::class, 'store'])->name('upload.file')->middleware('auth');  // Using the auth middleware to ensure only logged-in users can access.
 
 // Dashboard
-Route::get('/dashboard', [FileController::class, 'dashboard'])->name('dashboard');
+Route::get('/', [FileController::class, 'dashboard'])->name('dashboard')->middleware('auth');  // Using the auth middleware to ensure only logged-in users can access.
 
 
 
