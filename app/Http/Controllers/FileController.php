@@ -67,7 +67,7 @@ class FileController extends Controller
             // Insert a new record into 'processing_statuses' table with a status of 'pending'.
             DB::table('processing_statuses')->insert([
                 'file_id' => $file->id,
-                'status' => 'pending',
+                'status' => 'edit_ready',
                 'created_at' => now(),
             ]);
 
