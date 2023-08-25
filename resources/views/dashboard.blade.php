@@ -19,7 +19,7 @@
                         {{ $file->file_path }}
                         @if ($file->status == 'completed')
                             <br />
-                            <a href="{{ $file->download_link }}">Download</a>
+                            <a href="{{ route('download.file', ['file' => $file->download_file_path]) }}">Download</a>
                         @endif
                     </td>  <!-- You might want to extract just the filename instead of the full path -->
                     <td>{{ $file->uploaded_at }}</td>

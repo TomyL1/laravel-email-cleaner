@@ -23,6 +23,11 @@ class FileController extends Controller
         return view('dashboard', ['files' => $files]);
     }
 
+    public function download($file) {
+        echo 'hello';
+        exit;
+    }
+
 
     public function store(Request $request)
     {

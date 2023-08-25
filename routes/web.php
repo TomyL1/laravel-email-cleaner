@@ -32,5 +32,7 @@ Route::post('/upload', [FileController::class, 'store'])->name('upload.file')->m
 // Dashboard
 Route::get('/', [FileController::class, 'dashboard'])->name('dashboard')->middleware('auth');  // Using the auth middleware to ensure only logged-in users can access.
 
+// Download
+Route::get('/download/{file}', [FileController::class, 'download'])->name('download.file')->middleware('auth');  // Using the auth middleware to ensure only logged-in users can access.
 
 
