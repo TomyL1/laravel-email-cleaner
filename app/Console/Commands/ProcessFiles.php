@@ -38,7 +38,7 @@ class ProcessFiles extends Command
                     // Here, also update the download_link if you can fetch it from DeBounce
                     $downloadLink = $response->debounce->download_link;
 
-                    $downloadFilePath = $this->downloadFile($downloadLink, $file->id);
+                    $downloadFilePath = $this->downloadFile($downloadLink);
 
                     if ($downloadLink) {
                         DB::table('processing_statuses')->where('id', $file->id)->update([
@@ -96,14 +96,15 @@ class ProcessFiles extends Command
         }
     }
 
-    protected function downloadFile($downloadLink, $fileId)
+    protected function downloadFile($downloadLink)
     {
         $client = new \GuzzleHttp\Client();
 
         try {
             $response = $client->get($downloadLink);
+            $fileName = md5($downloadLink);
 
-            $downloadedFilePath = 'downloads/' . $fileId . '.csv';
+            $downloadedFilePath = 'downloads/' . $fileName  . '.csv';
             Storage::put($downloadedFilePath, $response->getBody());
 
             return $downloadedFilePath;

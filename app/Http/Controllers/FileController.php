@@ -2,9 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\File;  // Make sure you have a File model that corresponds to your files table.
+
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
+
 
 class FileController extends Controller
 {
@@ -23,11 +27,18 @@ class FileController extends Controller
         return view('dashboard', ['files' => $files]);
     }
 
-    public function download($file) {
-        echo 'hello';
-        exit;
-    }
 
+
+    public function download($file) {
+        $path = Storage::path("downloads/" . $file);
+        Log::info('download path: ' . $path);
+
+        if (!Storage::exists("downloads/" . $file)) {
+            abort(404);
+        }
+
+        return response()->download($path);
+    }
 
     public function store(Request $request)
     {
@@ -46,6 +57,7 @@ class FileController extends Controller
             // Store file details in the database
             $file = File::create([
                 'instance_name' => $request->input('instance_name'),  // Adjust this if you have another method for naming.
+                'message' => $request->input('message'),  // Adjust this if you have another method for naming.
                 'file_path' => $path,
                 'size' => $request->file('file')->getSize(),
                 'uploaded_at' => now(),

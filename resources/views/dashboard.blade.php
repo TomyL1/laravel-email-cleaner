@@ -6,24 +6,27 @@
         <table class="table">
             <thead>
             <tr>
-                <th>Filename</th>
+                <th>Instance / FileName</th>
                 <th>Upload Date</th>
+                <th>Message</th>
                 <th>Status</th>
-                <!-- Add any other relevant columns here -->
+                <th>Download</th>
             </tr>
             </thead>
             <tbody>
             @foreach($files as $file)
                 <tr>
                     <td>
-                        {{ $file->file_path }}
-                        @if ($file->status == 'completed')
-                            <br />
-                            <a href="{{ route('download.file', ['file' => $file->download_file_path]) }}">Download</a>
-                        @endif
+                        {{ $file->instance_name }}
                     </td>  <!-- You might want to extract just the filename instead of the full path -->
                     <td>{{ $file->uploaded_at }}</td>
+                    <td>{{ $file->message }}</td>
                     <td>{{ $file->status }}</td>
+                    <td>
+                        @if ($file->status == 'completed')
+                            <a href="{{ route('download.file', ['file' => basename($file->download_file_path)]) }}">Download</a>
+                        @endif
+                    </td>
                 </tr>
             @endforeach
             </tbody>

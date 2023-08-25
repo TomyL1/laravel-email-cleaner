@@ -20,6 +20,7 @@
             @csrf
             <input type="file" name="file" required>
             <input type="text" name="instance_name" placeholder="Instance Name" required>
+            <input type="text" name="message" placeholder="Any important info">
             <button type="submit">Upload</button>
         </form>
     </div>
