@@ -11,7 +11,7 @@ class File extends Model
 
     protected $table = 'cl_upload_files';
     protected $fillable = [
-        'instance_name', 'file_path', 'size', 'uploaded_at', 'checksum'
+        'instance_name', 'file_path', 'message', 'size', 'uploaded_at', 'checksum'
     ];
 
     public $timestamps = false;

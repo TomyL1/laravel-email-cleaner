@@ -56,24 +56,27 @@ class FileController extends Controller
 
             // Store file details in the database
             $file = File::create([
-                'instance_name' => $request->input('instance_name'),  // Adjust this if you have another method for naming.
-                'message' => $request->input('message'),  // Adjust this if you have another method for naming.
+                'instance_name' => $request->input('instance_name'),
+                'message' => $request->input('message'),
                 'file_path' => $path,
                 'size' => $request->file('file')->getSize(),
                 'uploaded_at' => now(),
                 'checksum' => $checksum,
             ]);
-
+            Log::info('About to insert into processing_statuses. File ID: ' . $file->id);
             // Insert a new record into 'processing_statuses' table with a status of 'pending'.
             DB::table('processing_statuses')->insert([
                 'file_id' => $file->id,
                 'status' => 'edit_ready',
                 'created_at' => now(),
             ]);
+            Log::info('Inserted into processing_statuses');
+
 
 
             return back()->with('success', 'File uploaded successfully!');  // Redirect back to the upload form with a success message.
         } catch (\Exception $e) {
+            Log::error('Error uploading file: ' . $e->getMessage()); // Log the actual error message
             return back()->with('error', 'Error uploading file!');  // Redirect back to the upload form with an error message.
         }
     }
