@@ -35,6 +35,9 @@ Route::get('/', [FileController::class, 'dashboard'])->name('dashboard')->middle
 // Download
 Route::get('/download/{file}', [FileController::class, 'download'])->name('download.file')->middleware('auth');
 
+// Show content
+Route::get('files/{fileId}/show-content', [FileController::class, 'showContent'])->name('files.showContent');
+
 
 
 
