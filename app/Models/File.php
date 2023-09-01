@@ -15,20 +15,5 @@ class File extends Model
     ];
 
     public $timestamps = false;
-
-    public function readCSVContent($lines = 100)
-    {
-        $filePath = storage_path('app/' . $this->file_path); // Change this to the correct path
-        $file = fopen($filePath, 'r');
-        $content = [];
-
-        for ($i = 0; $i < $lines && !feof($file); $i++) {
-            $content[] = fgetcsv($file);
-        }
-        fclose($file);
-
-        return $content;
-    }
-
 }
 

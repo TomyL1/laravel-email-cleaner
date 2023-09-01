@@ -80,12 +80,5 @@ class FileController extends Controller
             return back()->with('error', 'Error uploading file!');  // Redirect back to the upload form with an error message.
         }
     }
-    public function showContent($fileId)
-    {
-        $file = File::find($fileId);
-        $content = $file->readCSVContent();
-        return view('show-content', ['content' => $content]);
-    }
-
 }
 

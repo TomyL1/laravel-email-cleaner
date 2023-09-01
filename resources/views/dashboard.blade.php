@@ -11,7 +11,6 @@
                 <th>Message</th>
                 <th>Status</th>
                 <th>Download</th>
-                <th>View Content</th>
             </tr>
             </thead>
             <tbody>
@@ -28,7 +27,6 @@
                             <a href="{{ route('download.file', ['file' => basename($file->download_file_path)]) }}">Download</a>
                         @endif
                     </td>
-                    <td><a href="{{ route('files.showContent', $file->file_id) }}">View Content</a></td>
                 </tr>
             @endforeach
             </tbody>
