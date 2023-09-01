@@ -28,7 +28,7 @@
                             <a href="{{ route('download.file', ['file' => basename($file->download_file_path)]) }}">Download</a>
                         @endif
                     </td>
-                    <td><a href="{{ route('files.showContent', $file->id) }}">View Content</a></td>
+                    <td><a href="{{ route('files.showContent', $file->file_id) }}">View Content</a></td>
                 </tr>
             @endforeach
             </tbody>
