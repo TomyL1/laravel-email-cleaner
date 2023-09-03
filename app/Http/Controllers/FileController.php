@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
+use Spatie\SimpleExcel\SimpleExcelReader;
 
 
 class FileController extends Controller
@@ -45,11 +46,15 @@ class FileController extends Controller
         try {
             // Validate the uploaded file
             $validated = $request->validate([
-                'file' => 'required|file|mimes:csv,txt|max:2048',  // This is an example validation. Adjust as necessary.
+                'file' => 'required|file|mimes:txt,csv|max:2048',  // This is an example validation. Adjust as necessary.
             ]);
 
             // Store the uploaded file and get its path
-            $path = $request->file('file')->store('uploads');
+            $hashedName = pathinfo($request->file('file')->hashName(), PATHINFO_FILENAME); // without extension
+            $extension = $request->file('file')->getClientOriginalExtension();
+
+            $path = $request->file('file')->storeAs('uploads', $hashedName . '.' . $extension);
+
 
             // Compute the checksum. This is just an example using md5. You can use another method if you prefer.
             $checksum = md5_file($request->file('file')->getRealPath());
@@ -72,13 +77,30 @@ class FileController extends Controller
             ]);
             Log::info('Inserted into processing_statuses');
 
-
-
             return back()->with('success', 'File uploaded successfully!');  // Redirect back to the upload form with a success message.
         } catch (\Exception $e) {
             Log::error('Error uploading file: ' . $e->getMessage()); // Log the actual error message
             return back()->with('error', 'Error uploading file!');  // Redirect back to the upload form with an error message.
         }
     }
+
+    public function viewFile($file)
+    {
+        $path = Storage::path("uploads/" . $file);
+
+        if (!Storage::exists("uploads/" . $file)) {
+            abort(404);
+        }
+
+        $rows = SimpleExcelReader::create($path)
+            ->useDelimiter(',')
+            ->getRows()
+            ->toArray();
+
+        return view('viewfile', ['rows' => $rows]);
+    }
+
 }
+
+
 

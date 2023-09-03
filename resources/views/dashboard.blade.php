@@ -16,10 +16,11 @@
             <tbody>
             @foreach($files as $file)
                 <tr>
+                    <td>{{ $file->instance_name }}</td>
                     <td>
-                        {{ $file->instance_name }}
-                    </td>  <!-- You might want to extract just the filename instead of the full path -->
-                    <td>{{ $file->uploaded_at }}</td>
+                        {{ $file->uploaded_at }} <br>
+                        <a href="{{ route('view.file', ['file' => basename($file->file_path)]) }}">View original file</a>
+                    </td>
                     <td>{{ $file->message }}</td>
                     <td>{{ $file->status }}</td>
                     <td>
