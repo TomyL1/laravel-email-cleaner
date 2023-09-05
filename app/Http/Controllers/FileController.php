@@ -84,89 +84,71 @@ class FileController extends Controller
         }
     }
 
-    public function viewFile($file, Request $request)
-    {
-        $path = Storage::path("uploads/" . $file);
+    // FileController.php
+
+    private function checkFileExists($file) {
         if (!Storage::exists("uploads/" . $file)) {
             abort(404);
         }
+        return Storage::path("uploads/" . $file);
+    }
 
-        $encoding = $request->input('encoding', 'UTF-8'); // Default to UTF-8
-        $content = file_get_contents($path);
-        $error = null;
-        try {
-            if ($encoding !== 'UTF-8') {
-                $content = iconv($encoding, 'UTF-8', $content);
+    private function convertEncoding($content, $encoding) {
+        if ($encoding !== 'UTF-8') {
+            try {
+                return iconv($encoding, 'UTF-8', $content);
+            } catch (\Exception $e) {
+                Log::error('Error converting encoding: ' . $e->getMessage());
+                throw $e;  // or return some default/fallback value
             }
-        } catch (Exception $e) {
-            // Handle the exception as needed, maybe set content to a message or log the error
-            Log::error('Error converting encoding: ' . $e->getMessage());
-            $error = 'Error converting encoding: ' . $e->getMessage();
         }
+        return $content;
+    }
 
-        $rows = str_getcsv($content, "\n"); //parse the rows
-        $separator = $request->input('separator', ','); // Default to comma
-        $request->session()->put('separator', $separator);
-
-        foreach($rows as &$row) {
+    private function parseCsvContent($content, $separator) {
+        $rows = str_getcsv($content, "\n");
+        foreach ($rows as &$row) {
             $row = str_getcsv($row, $separator);
         }
+        return $rows;
+    }
 
-        // Helper function to check if all elements in an array are null
-        $allNull = function($row) {
-            return empty(array_filter($row, function($item) { return $item !== null; }));
-        };
-
-        // Filter out the rows where all elements are null
-        $rows = array_filter($rows, function($row) use ($allNull) {
-            return !$allNull($row);
+    private function filterNullRows($rows) {
+        return array_filter($rows, function($row) {
+            return !empty(array_filter($row, function($item) { return $item !== null; }));
         });
+    }
 
-        return view('viewFile', ['rows' => $rows, 'file' => $file, 'encoding' => $encoding, 'error' => $error]);
+    public function viewFile($file, Request $request)
+    {
+        $path = $this->checkFileExists($file);
+        $content = file_get_contents($path);
+        $encoding = $request->input('encoding', 'UTF-8');
+        $content = $this->convertEncoding($content, $encoding);
+        $separator = $request->input('separator', ',');
+        $request->session()->put('separator', $separator);
+        $rows = $this->parseCsvContent($content, $separator);
+        $rows = $this->filterNullRows($rows);
+        return view('viewFile', ['rows' => $rows, 'file' => $file, 'encoding' => $encoding]);
     }
 
     public function saveFile($file, $encoding, Request $request)
     {
-        $path = Storage::path("uploads/" . $file);
-
-        if (!Storage::exists("uploads/" . $file)) {
-            abort(404);
-        }
-
+        $path = $this->checkFileExists($file);
         $content = file_get_contents($path);
+        $content = $this->convertEncoding($content, $encoding);
+        $separator = $request->input('separator', ',');
+        $request->session()->put('separator', $separator);
+        $rows = $this->parseCsvContent($content, $separator);
+        $rows = $this->filterNullRows($rows);
 
-        if ($encoding !== 'UTF-8') {
-            try {
-                $content = iconv($encoding, 'UTF-8', $content);
-            } catch (\Exception $e) {
-                // Handle exception
-                Log::error('Error converting encoding: ' . $e->getMessage());
-                return redirect()->route('view.file', ['file' => $file])->with('error', 'Error converting encoding: ' . $e->getMessage());
-            }
-        }
-
-        $separator = $request->input('separator', ','); // Default to comma
-        $request->session()->put('separator', $separator); // Save to session
-
-        $rows = str_getcsv($content, "\n"); // Parse the rows
-
-        foreach ($rows as &$row) {
-            $row = str_getcsv($row, $separator); // Parse each row using custom separator
-        }
-
-        // Now convert back to CSV format
         $newContent = '';
-        foreach ($rows as $rowNew) {
-            $newContent .= implode(',', $rowNew) . "\n";
+        foreach ($rows as $row) {
+            $newContent .= implode(',', $row) . "\n";
         }
-
-        // Save the new content back to the file
         file_put_contents($path, $newContent);
-
         return redirect()->route('view.file', ['file' => $file])->with('success', 'File saved successfully.');
     }
-
-
 }
 
 

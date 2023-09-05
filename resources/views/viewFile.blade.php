@@ -6,7 +6,7 @@
             <div class="col-12">
                 <form action="{{ route('save.file', ['file' => $file, 'encoding' => $encoding]) }}" method="POST">
                     @csrf  <!-- CSRF token for security -->
-                    <input type="hidden" name="separator" disabled value="{{ session('separator', '') }}">
+                    <input type="hidden" name="separator" value="{{ session('separator', '') }}">
                     <div class="row">
                         <div class="col-12 d-grid">
                             <button type="submit" class="btn btn-success">@lang('lngViewFile.saveFile')</button>
