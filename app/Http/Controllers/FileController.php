@@ -135,12 +135,13 @@ class FileController extends Controller
 
         $content = file_get_contents($path);
 
-        if ($encoding !== 'UTF-8' && in_array($encoding, mb_list_encodings())) {
+        if ($encoding !== 'UTF-8') {
             try {
                 $content = iconv($encoding, 'UTF-8', $content);
             } catch (\Exception $e) {
                 // Handle exception
                 Log::error('Error converting encoding: ' . $e->getMessage());
+                return redirect()->route('view.file', ['file' => $file])->with('error', 'Error converting encoding: ' . $e->getMessage());
             }
         }
 
