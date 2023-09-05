@@ -36,7 +36,7 @@ Route::get('/', [FileController::class, 'dashboard'])->name('dashboard')->middle
 Route::get('/download/{file}', [FileController::class, 'download'])->name('download.file')->middleware('auth');
 
 // View file
-Route::get('/viewfile/{file}', [FileController::class, 'viewFile'])->name('view.file');
+Route::get('/view-file/{file}', [FileController::class, 'viewFile'])->name('view.file');
 
-
-
+// Save file
+Route::post('/save-file/{file}/{encoding}', [FileController::class, 'saveFile'])->name('save.file')->middleware('auth');

@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
-use Spatie\SimpleExcel\SimpleExcelReader;
+use Exception;
 
 
 class FileController extends Controller
@@ -84,7 +84,47 @@ class FileController extends Controller
         }
     }
 
-    public function viewFile($file)
+    public function viewFile($file, Request $request)
+    {
+        $path = Storage::path("uploads/" . $file);
+        if (!Storage::exists("uploads/" . $file)) {
+            abort(404);
+        }
+
+        $encoding = $request->input('encoding', 'UTF-8'); // Default to UTF-8
+        $content = file_get_contents($path);
+
+        try {
+            if ($encoding !== 'UTF-8') {
+                $content = mb_convert_encoding($content, 'UTF-8', $encoding);
+            }
+        } catch (Exception $e) {
+            // Handle the exception as needed, maybe set content to a message or log the error
+            Log::error('Error converting encoding: ' . $e->getMessage());
+        }
+
+        $rows = str_getcsv($content, "\n"); //parse the rows
+        $separator = $request->input('separator', ','); // Default to comma
+        $request->session()->put('separator', $separator);
+
+        foreach($rows as &$row) {
+            $row = str_getcsv($row, $separator);
+        }
+
+        // Helper function to check if all elements in an array are null
+        $allNull = function($row) {
+            return empty(array_filter($row, function($item) { return $item !== null; }));
+        };
+
+        // Filter out the rows where all elements are null
+        $rows = array_filter($rows, function($row) use ($allNull) {
+            return !$allNull($row);
+        });
+
+        return view('viewFile', ['rows' => $rows, 'file' => $file, 'encoding' => $encoding]);
+    }
+
+    public function saveFile($file, $encoding, Request $request)
     {
         $path = Storage::path("uploads/" . $file);
 
@@ -92,13 +132,38 @@ class FileController extends Controller
             abort(404);
         }
 
-        $rows = SimpleExcelReader::create($path)
-            ->useDelimiter(',')
-            ->getRows()
-            ->toArray();
+        $content = file_get_contents($path);
 
-        return view('viewfile', ['rows' => $rows]);
+        if ($encoding !== 'UTF-8' && in_array($encoding, mb_list_encodings())) {
+            try {
+                $content = mb_convert_encoding($content, 'UTF-8', $encoding);
+            } catch (\Exception $e) {
+                // Handle exception
+                Log::error('Error converting encoding: ' . $e->getMessage());
+            }
+        }
+
+        $separator = $request->input('separator', ','); // Default to comma
+        $request->session()->put('separator', $separator); // Save to session
+
+        $rows = str_getcsv($content, "\n"); // Parse the rows
+
+        foreach ($rows as &$row) {
+            $row = str_getcsv($row, $separator); // Parse each row using custom separator
+        }
+
+        // Now convert back to CSV format
+        $newContent = '';
+        foreach ($rows as $rowNew) {
+            $newContent .= implode(',', $rowNew) . "\n";
+        }
+
+        // Save the new content back to the file
+        file_put_contents($path, $newContent);
+
+        return redirect()->route('view.file', ['file' => $file])->with('success', 'File saved successfully.');
     }
+
 
 }
 
