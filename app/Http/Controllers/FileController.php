@@ -78,7 +78,7 @@ class FileController extends Controller
             Log::info('Inserted into processing_statuses');
 
             return back()->with('success', 'File uploaded successfully!');  // Redirect back to the upload form with a success message.
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             Log::error('Error uploading file: ' . $e->getMessage()); // Log the actual error message
             return back()->with('error', 'Error uploading file!');  // Redirect back to the upload form with an error message.
         }
@@ -96,8 +96,8 @@ class FileController extends Controller
     private function convertEncoding($content, $encoding) {
         if ($encoding !== 'UTF-8') {
             try {
-                return iconv($encoding, 'UTF-8', $content);
-            } catch (\Exception $e) {
+                return iconv($encoding, 'UTF-8//IGNORE', $content);
+            } catch (Exception $e) {
                 Log::error('Error converting encoding: ' . $e->getMessage());
                 throw $e;  // or return some default/fallback value
             }
@@ -149,6 +149,46 @@ class FileController extends Controller
         file_put_contents($path, $newContent);
         return redirect()->route('view.file', ['file' => $file])->with('success', 'File saved successfully.');
     }
+
+    public function editFile($file, Request $request)
+    {
+        $path = $this->checkFileExists($file);
+        $content = file_get_contents($path);
+
+        // assume the CSV uses commas, adjust as needed
+        $separator = ',';
+        $rows = $this->parseCsvContent($content, $separator);
+
+        return view('editFile', ['rows' => $rows, 'file' => $file]);
+    }
+
+    public function updateFile($file, Request $request)
+    {
+        // Example receiving the list of column indexes to remove
+        $columns_to_remove = $request->input('columns_to_remove');
+
+        $path = $this->checkFileExists($file);
+        $content = file_get_contents($path);
+        $rows = $this->parseCsvContent($content, ',');
+
+        // Remove the unwanted columns
+        $new_rows = [];
+        foreach ($rows as $row) {
+            $new_row = [];
+            foreach ($row as $index => $cell) {
+                if (!in_array($index, $columns_to_remove)) {
+                    $new_row[] = $cell;
+                }
+            }
+            $new_rows[] = implode(',', $new_row);
+        }
+
+        // Combine the rows back to a single string
+        $new_content = implode("\n", $new_rows);
+
+        return view('editFile', ['rows' => $this->parseCsvContent($new_content, ','), 'file' => $file]);
+    }
+
 }
 
 
