@@ -93,14 +93,15 @@ class FileController extends Controller
 
         $encoding = $request->input('encoding', 'UTF-8'); // Default to UTF-8
         $content = file_get_contents($path);
-
+        $error = null;
         try {
             if ($encoding !== 'UTF-8') {
-                $content = mb_convert_encoding($content, 'UTF-8', $encoding);
+                $content = iconv($encoding, 'UTF-8', $content);
             }
         } catch (Exception $e) {
             // Handle the exception as needed, maybe set content to a message or log the error
             Log::error('Error converting encoding: ' . $e->getMessage());
+            $error = 'Error converting encoding: ' . $e->getMessage();
         }
 
         $rows = str_getcsv($content, "\n"); //parse the rows
@@ -121,7 +122,7 @@ class FileController extends Controller
             return !$allNull($row);
         });
 
-        return view('viewFile', ['rows' => $rows, 'file' => $file, 'encoding' => $encoding]);
+        return view('viewFile', ['rows' => $rows, 'file' => $file, 'encoding' => $encoding, 'error' => $error]);
     }
 
     public function saveFile($file, $encoding, Request $request)
@@ -136,7 +137,7 @@ class FileController extends Controller
 
         if ($encoding !== 'UTF-8' && in_array($encoding, mb_list_encodings())) {
             try {
-                $content = mb_convert_encoding($content, 'UTF-8', $encoding);
+                $content = iconv($encoding, 'UTF-8', $content);
             } catch (\Exception $e) {
                 // Handle exception
                 Log::error('Error converting encoding: ' . $e->getMessage());
