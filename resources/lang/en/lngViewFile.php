@@ -9,5 +9,6 @@ return [
     'separator' => 'Separator',
     'encoding' => 'Encoding',
     'noData' => 'No data found',
-
+    'save' => 'Save selected colums with encoding',
+    'deleteFirstRow' => 'Delete first row'
 ];

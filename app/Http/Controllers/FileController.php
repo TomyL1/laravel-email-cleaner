@@ -142,54 +142,35 @@ class FileController extends Controller
         $rows = $this->parseCsvContent($content, $separator);
         $rows = $this->filterNullRows($rows);
 
-        $newContent = '';
-        foreach ($rows as $row) {
-            $newContent .= implode(',', $row) . "\n";
+        $selectedColumns = $request->input('columns', []);
+        $deleteFirst = $request->has('deleteFirst');
+
+
+        if (empty($selectedColumns) && !$deleteFirst) {
+            return redirect()->route('view.file', ['file' => $file])->with('error', 'You must select at least one column.');
+        } else if (empty($selectedColumns) && $deleteFirst) {
+            array_shift($rows);
+
+            $newContent = '';
+            foreach ($rows as $row) {
+                $newContent .= implode($separator, $row) . "\n";
+            }
+            file_put_contents($path, $newContent);
+            return redirect()->route('view.file', ['file' => $file])->with('success', 'File saved successfully.');
         }
+
+        $newContent = '';
+
+        if ($deleteFirst) {
+            array_shift($rows);
+        }
+        foreach ($rows as $row) {
+            $filteredRow = array_intersect_key($row, array_flip($selectedColumns));
+            $newContent .= implode($separator, $filteredRow) . "\n";
+        }
+
         file_put_contents($path, $newContent);
+
         return redirect()->route('view.file', ['file' => $file])->with('success', 'File saved successfully.');
     }
-
-    public function editFile($file, Request $request)
-    {
-        $path = $this->checkFileExists($file);
-        $content = file_get_contents($path);
-
-        // assume the CSV uses commas, adjust as needed
-        $separator = ',';
-        $rows = $this->parseCsvContent($content, $separator);
-
-        return view('editFile', ['rows' => $rows, 'file' => $file]);
-    }
-
-    public function updateFile($file, Request $request)
-    {
-        // Example receiving the list of column indexes to remove
-        $columns_to_remove = $request->input('columns_to_remove');
-
-        $path = $this->checkFileExists($file);
-        $content = file_get_contents($path);
-        $rows = $this->parseCsvContent($content, ',');
-
-        // Remove the unwanted columns
-        $new_rows = [];
-        foreach ($rows as $row) {
-            $new_row = [];
-            foreach ($row as $index => $cell) {
-                if (!in_array($index, $columns_to_remove)) {
-                    $new_row[] = $cell;
-                }
-            }
-            $new_rows[] = implode(',', $new_row);
-        }
-
-        // Combine the rows back to a single string
-        $new_content = implode("\n", $new_rows);
-
-        return view('editFile', ['rows' => $this->parseCsvContent($new_content, ','), 'file' => $file]);
-    }
-
 }
-
-
-

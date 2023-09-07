@@ -1,23 +1,5 @@
 @extends('layouts.app')
 
-@section('saveFile')
-    <div class="mb-3">
-        <div class="row">
-            <div class="col-12">
-                <form action="{{ route('save.file', ['file' => $file, 'encoding' => $encoding]) }}" method="POST">
-                    @csrf  <!-- CSRF token for security -->
-                    <input type="hidden" name="separator" value="{{ session('separator', '') }}">
-                    <div class="row">
-                        <div class="col-12 d-grid">
-                            <button type="submit" class="btn btn-success">@lang('lngViewFile.saveFile')</button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-@endsection
-
 @section ('changeEncoding')
     <div class="container mb-5">
         <h4>@lang('lngViewFile.changeEncoding')</h4>
@@ -87,19 +69,62 @@
         @endif
 
         @if(!empty($rows))
-            <table class="table">
-                <tbody>
-                @foreach($rows as $row)
-                    <tr>
-                        @foreach($row as $cell)
-                            <td>{!! $cell !!}</td>
+            <form action="{{ route('save.file', ['file' => $file, 'encoding' => $encoding]) }}" method="POST">
+                <div class="card">
+
+                    <div class="card-header">
+                        <div class="row">
+                            <div class="col-md-8 col-12">
+                                <h5>Select columns to save</h5>
+                            </div>
+                            <div class="col-md-4 col-12 d-grid justify-content-end">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox" name="deleteFirst" value="" id="deleteFirst">
+                                    <label class="form-check-label" for="deleteFirst">@lang('lngViewFile.deleteFirstRow')</label>
+                                </div>
+
+                                <button type="submit" class="btn btn-success">@lang('lngViewFile.save')</button>
+                            </div>
+                        </div>
+                    </div>
+                    @csrf
+
+                    <div class="card-content">
+                        <input type="hidden" name="separator" value="{{ session('separator', ',') }}">
+                    <table class="table">
+                        <tbody>
+                        <tr>
+                            @foreach($rows[0] as $index => $header)
+                                <th>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="columns[]" value="{{ $index }}" id="delCol_{{ $index }}">
+                                        <label for="delCol_{{ $index }}"></label>
+                                    </div>
+                                </th>
+                            @endforeach
+                        </tr>
+                        @foreach($rows as $row)
+                            <tr>
+                                @foreach($row as $cell)
+                                    <td>{!! $cell !!}</td>
+                                @endforeach
+                            </tr>
                         @endforeach
-                    </tr>
-                @endforeach
-                </tbody>
-            </table>
+                        </tbody>
+                    </table>
+                    </div>
+                    <div class="card-footer">
+                        <div class="row">
+                            <div class="col-12 d-grid justify-content-end">
+                                <button type="submit" class="btn btn-success">@lang('lngViewFile.save')</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
         @else
             <p>@lang('lngViewFile.noData')</p>
         @endif
+
     </div>
 @endsection
