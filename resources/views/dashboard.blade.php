@@ -19,7 +19,7 @@
                     <td>{{ $file->instance_name }}</td>
                     <td>
                         {{ $file->uploaded_at }} <br>
-                        <a href="{{ route('view.file', ['file' => basename($file->file_path)]) }}">View original file</a>
+                        <a href="{{ route('view.file', ['file' => $file->file_id]) }}">View original file</a>
                     </td>
                     <td>{{ $file->message }}</td>
                     <td>{{ $file->status }}</td>

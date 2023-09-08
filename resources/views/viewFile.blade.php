@@ -19,6 +19,7 @@
                 <button type="submit" class="btn btn-success">@lang('lngViewFile.submitToProcess')</button>
             </div>
         </div>
+    </form>
 @endsection
 
 @section ('changeEncoding')

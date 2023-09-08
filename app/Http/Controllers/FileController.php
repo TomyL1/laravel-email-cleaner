@@ -66,7 +66,7 @@ class FileController extends Controller
             $file = File::create([
                 'instance_name' => $request->input('instance_name'),
                 'message' => $request->input('message'),
-                'file_path' => $path,
+                'file_path' => $hashedName . '.' . $extension,
                 'size' => $request->file('file')->getSize(),
                 'uploaded_at' => now(),
                 'checksum' => $checksum,
@@ -89,7 +89,11 @@ class FileController extends Controller
 
     // FileController.php
 
-    private function checkFileExists($file) {
+    private function checkFileExists($fileId) {
+        $filePath = DB::table('cl_upload_files')->where('id', $fileId)->first();
+
+        $file = $filePath->file_path;
+
         if (!Storage::exists("uploads/" . $file)) {
             abort(404);
         }
@@ -178,8 +182,4 @@ class FileController extends Controller
         return redirect()->route('view.file', ['file' => $file])->with('success', 'File reverted successfully.');
     }
 
-    public function submitToProcess($file, Request $request) {
-        dd($file);
-
-    }
 }
