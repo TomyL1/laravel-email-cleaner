@@ -41,6 +41,18 @@ class FileController extends Controller
         return response()->download($path);
     }
 
+    public function downloadOriginal($fileId) {
+        $filePath = DB::table('cl_upload_files')->where('id', $fileId)->first();
+
+        $file = $filePath->file_path;
+
+        if (!Storage::exists("uploads/original/" . $file)) {
+            abort(404);
+        }
+
+        return response()->download(Storage::path("uploads/original/" . $file));
+    }
+
     public function store(Request $request)
     {
         try {
@@ -89,15 +101,19 @@ class FileController extends Controller
 
     // FileController.php
 
-    private function checkFileExists($fileId) {
-        $filePath = DB::table('cl_upload_files')->where('id', $fileId)->first();
+    private function checkFileExists($fileId, $folder = false) {
+        $file = DB::table('cl_upload_files')->where('id', $fileId)->first();
 
-        $file = $filePath->file_path;
+        if (!$folder) {
+            $filePath = 'uploads/'. $file->file_path;
+        } else {
+            $filePath = 'uploads/'. $folder . '/' . $file->file_path;
+        }
 
-        if (!Storage::exists("uploads/" . $file)) {
+        if (!Storage::exists($filePath)) {
             abort(404);
         }
-        return Storage::path("uploads/" . $file);
+        return Storage::path($filePath);
     }
 
     private function convertEncoding($content, $encoding) {
@@ -175,11 +191,53 @@ class FileController extends Controller
 
         return redirect()->route('view.file', ['file' => $file])->with('success', 'File saved successfully.');
     }
-    public function revertFile($file, Request $request) {
-        $path = Storage::path("uploads/original/" . $file);
-        $content = file_get_contents($path);
-        file_put_contents(Storage::path("uploads/" . $file), $content);
-        return redirect()->route('view.file', ['file' => $file])->with('success', 'File reverted successfully.');
+    public function revertFile($file, Request $request)
+    {
+        try
+        {
+            $folder = $request->query('folder');
+
+            // Check if the file exists in the specified folder and get the file path
+            $path = $this->checkFileExists($file, $folder);
+
+            // Get the file details from the database
+            $fileDetails = DB::table('cl_upload_files')->where('id', $file)->first();
+            if (!$fileDetails) {
+                // Handle the error properly, for example:
+                throw new Exception('File details not found.');
+            }
+
+            // Get the file name
+            $fileName = $fileDetails->file_path;
+
+            // Get the destination path
+            $destinationPath = Storage::path("uploads/" . $fileName);
+
+            // Copy the file content
+            if (!copy($path, $destinationPath)) {
+                // Handle the error properly, for example:
+                throw new Exception('File revert failed.');
+            }
+
+            return redirect()->route('view.file', ['file' => $file])->with('success', 'File reverted successfully.');
+        }
+        catch (Exception $e)
+        {
+            Log::error('Error reverting file: ' . $e->getMessage());
+            // Redirect with an error message, adapt as necessary
+            return redirect()->route('view.file', ['file' => $file])->with('error', 'Error reverting file.');
+        }
     }
 
+
+    public function submitToProcess($file, Request $request) {
+        $result = DB::table('processing_statuses')
+            ->where('file_id', $file)
+            ->update(['status' => 'pending']);
+
+        if (!$result) {
+            return redirect()->route('dashboard')->with('error', 'Error updating status.');
+        }
+        return redirect()->route('dashboard')->with('success', 'File submitted for processing.');
+    }
 }

@@ -2,6 +2,19 @@
 
 @section('content')
     <div class="container">
+
+        @if (session('success'))
+            <div class="alert alert-success">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div class="alert alert-danger">
+                {{ session('error') }}
+            </div>
+        @endif
+
         <h2>Files Dashboard</h2>
         <table class="table">
             <thead>
@@ -19,7 +32,10 @@
                     <td>{{ $file->instance_name }}</td>
                     <td>
                         {{ $file->uploaded_at }} <br>
-                        <a href="{{ route('view.file', ['file' => $file->file_id]) }}">View original file</a>
+                        <a class="btn btn-sm btn-outline-primary" href="{{ route('download.original', ['file' => $file->file_id]) }}">Download original</a>
+                        @if($file->status === 'edit_ready')
+                            <a class="btn btn-sm btn-outline-secondary" href="{{ route('view.file', ['file' => $file->file_id]) }}">Edit file</a>
+                        @endif
                     </td>
                     <td>{{ $file->message }}</td>
                     <td>{{ $file->status }}</td>

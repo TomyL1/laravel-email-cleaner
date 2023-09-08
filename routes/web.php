@@ -25,7 +25,7 @@ Auth::routes(['register'=>false]);
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
-// uploadd
+// upload
 Route::get('/upload', [FileController::class, 'uploadView'])->name('upload.view')->middleware('auth');  // Using the auth middleware to ensure only logged-in users can access.
 Route::post('/upload', [FileController::class, 'store'])->name('upload.file')->middleware('auth');  // Using the auth middleware to ensure only logged-in users can access.
 
@@ -34,6 +34,9 @@ Route::get('/', [FileController::class, 'dashboard'])->name('dashboard')->middle
 
 // Download
 Route::get('/download/{file}', [FileController::class, 'download'])->name('download.file')->middleware('auth');
+
+// Download original
+Route::get('/download-original/{file}', [FileController::class, 'downloadOriginal'])->name('download.original')->middleware('auth');
 
 // View file
 Route::get('/view-file/{file}', [FileController::class, 'viewFile'])->name('view.file');

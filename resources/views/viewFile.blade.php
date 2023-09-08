@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section ('revertFile')
-    <form action="{{ route('revert.file', ['file' => $file]) }}" method="POST">
+    <form action="{{ route('revert.file', ['file' => $file, 'folder'=>'original']) }}" method="POST">
         @csrf
         <div class="row">
             <div class="col-12 d-grid">

@@ -35,7 +35,6 @@ class ProcessFiles extends Command
 
             if ($success === '1') {
                 if ($status === 'completed') {
-                    // Here, also update the download_link if you can fetch it from DeBounce
                     $downloadLink = $response->debounce->download_link;
 
                     $downloadFilePath = $this->downloadFile($downloadLink);
@@ -44,7 +43,8 @@ class ProcessFiles extends Command
                         DB::table('processing_statuses')->where('id', $file->id)->update([
                             'status' => 'completed',
                             'download_link' => $downloadLink,
-                            'download_file_path' => $downloadFilePath
+                            'download_file_path' => $downloadFilePath,
+                            'updated_at' => now()
                         ]);
 
                         Log::info("File processing completed" . ' - File_id:' . $file->list_id);
