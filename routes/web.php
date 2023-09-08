@@ -40,3 +40,9 @@ Route::get('/view-file/{file}', [FileController::class, 'viewFile'])->name('view
 
 // Save file
 Route::post('/save-file/{file}/{encoding}', [FileController::class, 'saveFile'])->name('save.file')->middleware('auth');
+
+// Revert file
+Route::post('/revert-file/{file}', [FileController::class, 'revertFile'])->name('revert.file')->middleware('auth');
+
+// Submit to process
+Route::post('/submit-to-process/{file}', [FileController::class, 'submitToProcess'])->name('submitToProcess.file')->middleware('auth');

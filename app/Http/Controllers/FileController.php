@@ -53,7 +53,10 @@ class FileController extends Controller
             $hashedName = pathinfo($request->file('file')->hashName(), PATHINFO_FILENAME); // without extension
             $extension = $request->file('file')->getClientOriginalExtension();
 
-            $path = $request->file('file')->storeAs('uploads', $hashedName . '.' . $extension);
+
+            $requestFile = $request->file('file');
+            $path = $requestFile->storeAs('uploads', $hashedName . '.' . $extension);
+            $requestFile->storeAs('uploads/original', $hashedName . '.' . $extension);
 
 
             // Compute the checksum. This is just an example using md5. You can use another method if you prefer.
@@ -161,11 +164,22 @@ class FileController extends Controller
 
         $newContent = '';
         foreach ($rows as $row) {
-            $newContent .= implode($separator, $row) . "\n";
+            $newContent .= implode(',', $row) . "\n";
         }
 
         file_put_contents($path, $newContent);
 
         return redirect()->route('view.file', ['file' => $file])->with('success', 'File saved successfully.');
+    }
+    public function revertFile($file, Request $request) {
+        $path = Storage::path("uploads/original/" . $file);
+        $content = file_get_contents($path);
+        file_put_contents(Storage::path("uploads/" . $file), $content);
+        return redirect()->route('view.file', ['file' => $file])->with('success', 'File reverted successfully.');
+    }
+
+    public function submitToProcess($file, Request $request) {
+        dd($file);
+
     }
 }
