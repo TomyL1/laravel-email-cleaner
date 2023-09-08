@@ -41,7 +41,7 @@
                     <td>{{ $file->status }}</td>
                     <td>
                         @if ($file->status === 'completed')
-                            <a class="btn btn-sm btn-outline-secondary" href="{{ route('view.file', ['file' => $file->file_id]) }}">Edit file</a>
+                            <a class="btn btn-sm btn-outline-secondary" href="{{ route('view.file', ['file' => $file->file_id, 'download'=> true]) }}">Edit file</a>
                         @endif
                         @if ($file->status === 'download_ready')
                             <a class="btn btn-sm btn-outline-primary" href="{{ route('download.file', ['file' => basename($file->download_file_path)]) }}">Download</a>

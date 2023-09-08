@@ -43,9 +43,14 @@ class ProcessFiles extends Command
                         DB::table('processing_statuses')->where('id', $file->id)->update([
                             'status' => 'completed',
                             'download_link' => $downloadLink,
-                            'download_file_path' => $downloadFilePath,
                             'updated_at' => now()
                         ]);
+                        DB::table('cl_upload_files')
+                            ->where('id', $file->file_id)
+                            ->update([
+                                'download_file_path' => $downloadFilePath,
+                                'updated_at' => now()
+                            ]);
 
                         Log::info("File processing completed" . ' - File_id:' . $file->list_id);
                         $this->info("File processing completed" . ' - File_id:' . $file->list_id);
@@ -104,10 +109,14 @@ class ProcessFiles extends Command
             $response = $client->get($downloadLink);
             $fileName = md5($downloadLink);
 
-            $downloadedFilePath = $fileName  . '.csv';
+            $downloadedFileName = $fileName . '.csv';
+            $downloadedFilePath = 'downloads/' . $downloadedFileName;
             Storage::put($downloadedFilePath, $response->getBody());
 
-            return $downloadedFilePath;
+            // untouched file for revert
+            Storage::put('downloads/original/' . $downloadedFileName , $response->getBody());
+
+            return $downloadedFileName;
 
         } catch (\GuzzleHttp\Exception\RequestException $e) {
             // You can log the error or handle it as per your application's requirements

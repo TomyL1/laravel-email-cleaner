@@ -106,6 +106,8 @@ class FileController extends Controller
 
         if (!$folder) {
             $filePath = 'uploads/'. $file->file_path;
+        } else if ($folder === 'downloads') {
+            $filePath = 'downloads/'. $file->download_file_path;
         } else {
             $filePath = 'uploads/'. $folder . '/' . $file->file_path;
         }
@@ -144,7 +146,13 @@ class FileController extends Controller
 
     public function viewFile($file, Request $request)
     {
-        $path = $this->checkFileExists($file);
+        $download = $request->query('download');
+        if (!$download) {
+            $path = $this->checkFileExists($file);
+        } else {
+            $path = $this->checkFileExists($file, 'downloads');
+        }
+
         $content = file_get_contents($path);
         $encoding = $request->input('encoding', 'UTF-8');
         $content = $this->convertEncoding($content, $encoding);
@@ -157,7 +165,12 @@ class FileController extends Controller
 
     public function saveFile($file, $encoding, Request $request)
     {
-        $path = $this->checkFileExists($file);
+        $download = $request->query('download');
+        if (!$download) {
+            $path = $this->checkFileExists($file);
+        } else {
+            $path = $this->checkFileExists($file, 'downloads');
+        }
         $content = file_get_contents($path);
         $content = $this->convertEncoding($content, $encoding);
         $separator = $request->input('separator', ',');
@@ -174,7 +187,11 @@ class FileController extends Controller
 
         if (empty($selectedColumns)) {
             if (!$deleteFirst) {
-                return redirect()->route('view.file', ['file' => $file])->with('error', 'You must select at least one column.');
+                if (!$download) {
+                    return redirect()->route('view.file', ['file' => $file])->with('error', 'You must select at least one column.');
+                } else {
+                    return redirect()->route('view.file', ['file' => $file, 'download' => true])->with('error', 'You must select at least one column.');
+                }
             }
         } else {
             foreach ($rows as $index => $row) {
@@ -188,8 +205,12 @@ class FileController extends Controller
         }
 
         file_put_contents($path, $newContent);
-
-        return redirect()->route('view.file', ['file' => $file])->with('success', 'File saved successfully.');
+        
+        if (!$download) {
+            return redirect()->route('view.file', ['file' => $file])->with('success', 'File saved successfully.');
+        } else {
+            return redirect()->route('view.file', ['file' => $file, 'download' => true])->with('success', 'File saved successfully.');
+        }
     }
     public function revertFile($file, Request $request)
     {
