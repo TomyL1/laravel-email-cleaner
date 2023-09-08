@@ -145,28 +145,23 @@ class FileController extends Controller
         $selectedColumns = $request->input('columns', []);
         $deleteFirst = $request->has('deleteFirst');
 
-
-        if (empty($selectedColumns) && !$deleteFirst) {
-            return redirect()->route('view.file', ['file' => $file])->with('error', 'You must select at least one column.');
-        } else if (empty($selectedColumns) && $deleteFirst) {
-            array_shift($rows);
-
-            $newContent = '';
-            foreach ($rows as $row) {
-                $newContent .= implode($separator, $row) . "\n";
-            }
-            file_put_contents($path, $newContent);
-            return redirect()->route('view.file', ['file' => $file])->with('success', 'File saved successfully.');
-        }
-
-        $newContent = '';
-
         if ($deleteFirst) {
             array_shift($rows);
         }
+
+        if (empty($selectedColumns)) {
+            if (!$deleteFirst) {
+                return redirect()->route('view.file', ['file' => $file])->with('error', 'You must select at least one column.');
+            }
+        } else {
+            foreach ($rows as $index => $row) {
+                $rows[$index] = array_intersect_key($row, array_flip($selectedColumns));
+            }
+        }
+
+        $newContent = '';
         foreach ($rows as $row) {
-            $filteredRow = array_intersect_key($row, array_flip($selectedColumns));
-            $newContent .= implode($separator, $filteredRow) . "\n";
+            $newContent .= implode($separator, $row) . "\n";
         }
 
         file_put_contents($path, $newContent);
