@@ -104,7 +104,7 @@ class ProcessFiles extends Command
             $response = $client->get($downloadLink);
             $fileName = md5($downloadLink);
 
-            $downloadedFilePath = 'downloads/' . $fileName  . '.csv';
+            $downloadedFilePath = $fileName  . '.csv';
             Storage::put($downloadedFilePath, $response->getBody());
 
             return $downloadedFilePath;
