@@ -107,23 +107,34 @@ class ProcessFiles extends Command
 
         try {
             $response = $client->get($downloadLink);
-            $fileName = md5($downloadLink);
 
-            $downloadedFileName = $fileName . '.csv';
-            $downloadedFilePath = 'downloads/' . $downloadedFileName;
-            Storage::put($downloadedFilePath, $response->getBody());
+            if ($response->getStatusCode() === 200) {
+                $bodyContents = $response->getBody()->getContents();
+                $fileName = md5($downloadLink);
 
-            // untouched file for revert
-            Storage::put('downloads/original/' . $downloadedFileName , $response->getBody());
+                $downloadedFileName = $fileName . '.csv';
+                $downloadedFilePath = 'downloads/' . $downloadedFileName;
 
-            return $downloadedFileName;
+                Storage::put($downloadedFilePath, $bodyContents);
+                Storage::put('downloads/original/' . $downloadedFileName, $bodyContents);
+
+                Log::info("File resource has been saved.");
+
+                return $downloadedFileName;
+            } else {
+                // Handle unsuccessful response here
+                Log::error("Unsuccessful response status code: " . $response->getStatusCode());
+                return null;
+            }
 
         } catch (\GuzzleHttp\Exception\RequestException $e) {
-            // You can log the error or handle it as per your application's requirements
             Log::error("Error fetching status from DeBounce: " . $e->getMessage());
             $this->error("Error fetching status from DeBounce: " . $e->getMessage());
-
-            return null;  // or you can return a default response structure indicating an error
+            return null;
+        } catch (\RuntimeException $e) {
+            Log::error("Runtime exception: " . $e->getMessage());
+            $this->error("Runtime exception: " . $e->getMessage());
+            return null;
         }
     }
 

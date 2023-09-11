@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section ('revertFile')
-    <form action="{{ route('revert.file', ['file' => $file, 'folder'=>'original']) }}" method="POST">
+    <form action="{{ route('revert.file', ['file' => $file]) }}" method="POST">
         @csrf
         <div class="row">
             <div class="col-12 d-grid">
@@ -17,6 +17,17 @@
         <div class="row mt-1">
             <div class="col-12 d-grid">
                 <button type="submit" class="btn btn-success">@lang('lngViewFile.submitToProcess')</button>
+            </div>
+        </div>
+    </form>
+@endsection
+
+@section('finalizeFile')
+    <form action="{{ route('finalize.file', ['file' => $file]) }}" method="POST">
+        @csrf
+        <div class="row mt-1">
+            <div class="col-12 d-grid">
+                <button type="submit" class="btn btn-success">@lang('lngViewFile.finalizeFile')</button>
             </div>
         </div>
     </form>
@@ -63,7 +74,12 @@
                 </div>
                 <div class="col-md-3 offset-md-5 col-12">
                     @yield('revertFile')
-                    @yield('submitToProcess')
+                    @if($fileStatus === 'completed')
+                        @yield('finalizeFile')
+                    @else
+                        @yield('submitToProcess')
+                    @endif
+
                 </div>
             </div>
         </div>
@@ -73,11 +89,6 @@
         <div class="row">
             <div class="col-md-8 col-12">
                 <h2>@lang('lngViewFile.viewFile')</h2>
-            </div>
-            <div class="col-md-4 col-12 d-grid ">
-                @if(!empty($rows))
-                    @yield('saveFile')
-                @endif
             </div>
         </div>
 

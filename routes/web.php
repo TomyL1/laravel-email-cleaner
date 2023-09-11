@@ -49,3 +49,6 @@ Route::post('/revert-file/{file}', [FileController::class, 'revertFile'])->name(
 
 // Submit to process
 Route::post('/submit-to-process/{file}', [FileController::class, 'submitToProcess'])->name('submitToProcess.file')->middleware('auth');
+
+// Finalize file
+Route::post('/finalize-file/{file}', [FileController::class, 'finalizeFile'])->name('finalize.file')->middleware('auth');

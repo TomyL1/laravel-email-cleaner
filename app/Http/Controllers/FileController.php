@@ -108,14 +108,23 @@ class FileController extends Controller
             $filePath = 'uploads/'. $file->file_path;
         } else if ($folder === 'downloads') {
             $filePath = 'downloads/'. $file->download_file_path;
+        } else if ($folder === 'downloads/original') {
+            $filePath = 'downloads/original/'. $file->download_file_path;
         } else {
             $filePath = 'uploads/'. $folder . '/' . $file->file_path;
         }
-
         if (!Storage::exists($filePath)) {
             abort(404);
         }
         return Storage::path($filePath);
+    }
+    private function checkFileStatus($fileId) {
+        $file = DB::table('processing_statuses')->where('file_id', $fileId)->first();
+
+        if (!$file) {
+            return null;
+        }
+        return $file->status;
     }
 
     private function convertEncoding($content, $encoding) {
@@ -146,13 +155,13 @@ class FileController extends Controller
 
     public function viewFile($file, Request $request)
     {
-        $download = $request->query('download');
-        if (!$download) {
-            $path = $this->checkFileExists($file);
-        } else {
-            $path = $this->checkFileExists($file, 'downloads');
-        }
+        $status = $this->checkFileStatus($file);
 
+        if ($status === 'completed') {
+            $path = $this->checkFileExists($file, 'downloads');
+        } else {
+            $path = $this->checkFileExists($file);
+        }
         $content = file_get_contents($path);
         $encoding = $request->input('encoding', 'UTF-8');
         $content = $this->convertEncoding($content, $encoding);
@@ -160,16 +169,17 @@ class FileController extends Controller
         $request->session()->put('separator', $separator);
         $rows = $this->parseCsvContent($content, $separator);
         $rows = $this->filterNullRows($rows);
-        return view('viewFile', ['rows' => $rows, 'file' => $file, 'encoding' => $encoding]);
+        return view('viewFile', ['rows' => $rows, 'file' => $file, 'fileStatus' => $status, 'encoding' => $encoding]);
     }
 
     public function saveFile($file, $encoding, Request $request)
     {
-        $download = $request->query('download');
-        if (!$download) {
-            $path = $this->checkFileExists($file);
-        } else {
+        $status = $this->checkFileStatus($file);
+
+        if ($status === 'completed') {
             $path = $this->checkFileExists($file, 'downloads');
+        } else {
+            $path = $this->checkFileExists($file);
         }
         $content = file_get_contents($path);
         $content = $this->convertEncoding($content, $encoding);
@@ -187,11 +197,7 @@ class FileController extends Controller
 
         if (empty($selectedColumns)) {
             if (!$deleteFirst) {
-                if (!$download) {
-                    return redirect()->route('view.file', ['file' => $file])->with('error', 'You must select at least one column.');
-                } else {
-                    return redirect()->route('view.file', ['file' => $file, 'download' => true])->with('error', 'You must select at least one column.');
-                }
+                return redirect()->route('view.file', ['file' => $file])->with('error', 'You must select at least one column.');
             }
         } else {
             foreach ($rows as $index => $row) {
@@ -205,38 +211,46 @@ class FileController extends Controller
         }
 
         file_put_contents($path, $newContent);
-        
-        if (!$download) {
-            return redirect()->route('view.file', ['file' => $file])->with('success', 'File saved successfully.');
-        } else {
-            return redirect()->route('view.file', ['file' => $file, 'download' => true])->with('success', 'File saved successfully.');
-        }
+
+        return redirect()->route('view.file', ['file' => $file])->with('success', 'File saved successfully.');
+    }
+    public function finalizeFile($file, Request $request) {
+        DB::table('processing_statuses')
+            ->where('file_id', $file)
+            ->update(['status' => 'download_ready']);
+
+        return redirect()->route('dashboard')->with('success', 'File finalized successfully.');
     }
     public function revertFile($file, Request $request)
     {
         try
         {
-            $folder = $request->query('folder');
+            $status = $this->checkFileStatus($file);
 
-            // Check if the file exists in the specified folder and get the file path
+            if ($status === 'completed') {
+                $folder = 'downloads/original';
+            } else {
+                $folder = 'original';
+            }
+
+
             $path = $this->checkFileExists($file, $folder);
 
-            // Get the file details from the database
             $fileDetails = DB::table('cl_upload_files')->where('id', $file)->first();
             if (!$fileDetails) {
-                // Handle the error properly, for example:
                 throw new Exception('File details not found.');
             }
 
-            // Get the file name
-            $fileName = $fileDetails->file_path;
+            if ($status === 'completed') {
+                $fileName = $fileDetails->download_file_path;
+                $destinationPath = Storage::path("downloads/" . $fileName);
+            } else {
+                $fileName = $fileDetails->file_path;
+                $destinationPath = Storage::path("uploads/" . $fileName);
+            }
 
-            // Get the destination path
-            $destinationPath = Storage::path("uploads/" . $fileName);
 
-            // Copy the file content
             if (!copy($path, $destinationPath)) {
-                // Handle the error properly, for example:
                 throw new Exception('File revert failed.');
             }
 
@@ -245,7 +259,6 @@ class FileController extends Controller
         catch (Exception $e)
         {
             Log::error('Error reverting file: ' . $e->getMessage());
-            // Redirect with an error message, adapt as necessary
             return redirect()->route('view.file', ['file' => $file])->with('error', 'Error reverting file.');
         }
     }

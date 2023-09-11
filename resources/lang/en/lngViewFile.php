@@ -13,4 +13,5 @@ return [
     'deleteFirstRow' => 'Delete first row',
     'revertFile' => 'Revert file from original',
     'submitToProcess' => 'Submit to process',
+    'finalizeFile' => 'Finalize file',
 ];
