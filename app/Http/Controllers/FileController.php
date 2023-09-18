@@ -24,10 +24,39 @@ class FileController extends Controller
             ->leftJoin('processing_statuses', 'cl_upload_files.id', '=', 'processing_statuses.file_id')
             ->orderBy('cl_upload_files.uploaded_at', 'desc')
             ->paginate(10);
-
         return view('dashboard', ['files' => $files]);
     }
 
+    public function deleteFile($file) {
+        try {
+            $fileDetails = DB::table('cl_upload_files')->where('id', $file)->first();
+            if (!$fileDetails) {
+                throw new Exception('File details not found.');
+            }
+
+            $filePath = 'uploads/'. $fileDetails->file_path;
+            $downloadFilePath = 'downloads/'. $fileDetails->download_file_path;
+            $originalFilePath = 'uploads/original/'. $fileDetails->file_path;
+
+            if (Storage::exists($filePath)) {
+                Storage::delete($filePath);
+            }
+            if (Storage::exists($downloadFilePath)) {
+                Storage::delete($downloadFilePath);
+            }
+            if (Storage::exists($originalFilePath)) {
+                Storage::delete($originalFilePath);
+            }
+
+            DB::table('processing_statuses')->where('file_id', $file)->delete();
+            DB::table('cl_upload_files')->where('id', $file)->delete();
+
+            return redirect()->route('dashboard')->with('success', 'File deleted successfully.');
+        } catch (Exception $e) {
+            Log::error('Error deleting file: ' . $e->getMessage());
+            return redirect()->route('dashboard')->with('error', 'Error deleting file.');
+        }
+    }
 
 
     public function download($file) {
@@ -215,7 +244,8 @@ class FileController extends Controller
         return redirect()->route('view.file', ['file' => $file])->with('success', 'File saved successfully.');
     }
     public function finalizeFile($file, Request $request) {
-        DB::table('processing_statuses')
+
+        $update = DB::table('processing_statuses')
             ->where('file_id', $file)
             ->update(['status' => 'download_ready']);
 

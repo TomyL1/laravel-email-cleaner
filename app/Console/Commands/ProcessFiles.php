@@ -148,7 +148,7 @@ class ProcessFiles extends Command
                     'accept' => 'application/json',
                 ],
                 'query' => [
-                    'api' => env('DEBOUNCE_API_KEY'),
+                    'api' => config('services.debounce.api_key'),
                     'list_id' => $listId
                 ]
             ]);
@@ -203,7 +203,7 @@ class ProcessFiles extends Command
     protected function sendToDebounce($fileId)
     {
         $file = DB::table('cl_upload_files')->where('id', $fileId)->first();
-        $fileUrl = "https://catalyst.sk/" . $file->file_path;
+        $fileUrl = url('/') . '/uploads/' . $file->file_path;
 
         Log::info('Sending file to DeBounce:', ['fileUrl' => $fileUrl]);
 
@@ -216,7 +216,7 @@ class ProcessFiles extends Command
                 ],
                 'query' => [
                     'url' => $fileUrl,
-                    'api' => env('DEBOUNCE_API_KEY')
+                    'api' => config('services.debounce.api_key'),
                 ],
             ]);
 
