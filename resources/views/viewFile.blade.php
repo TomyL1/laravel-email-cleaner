@@ -30,7 +30,6 @@
 @endsection
 
 @section ('submitToProcess')
-    <h4>@lang('lngViewFile.fileOperationsHeading')</h4>
     <form action="{{ route('submitToProcess.file', ['file' => $file]) }}" method="POST">
         @csrf
         <div class="row mt-1">
@@ -136,15 +135,26 @@
 
                     <div class="card-header">
                         <div class="row">
-                            <div class="col-md-8 col-12">
+                            <div class="col-md-5 col-12">
                                 <h5>Select columns to save</h5>
                             </div>
-                            <div class="col-md-4 col-12 d-grid justify-content-end">
+                            <div class="col-md-7 col-12 d-grid justify-content-end">
                                 <button type="submit" class="btn btn-primary">@lang('lngViewFile.save')</button>
-                                <div class="form-check mt-2">
-                                    <input class="form-check-input" type="checkbox" name="deleteFirst" value="" id="deleteFirst">
-                                    <label class="form-check-label" for="deleteFirst">@lang('lngViewFile.deleteFirstRow')</label>
+                                <div class="input-group mt-2">
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="checkbox" name="deleteFirst" value="" id="deleteFirst">
+                                        <label class="form-check-label" for="deleteFirst">@lang('lngViewFile.deleteFirstRow')</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="checkbox" name="reverseColumns" value="" id="reverseColumns">
+                                        <label class="form-check-label" for="reverseColumns">@lang('lngViewFile.reverseColumns')</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="checkbox" name="clearDuplicates" value="" id="clearDuplicates">
+                                        <label class="form-check-label" for="clearDuplicates">@lang('lngViewFile.clearDuplicates')</label>
+                                    </div>
                                 </div>
+
                             </div>
                         </div>
                     </div>

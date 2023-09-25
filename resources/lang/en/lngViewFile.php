@@ -19,4 +19,6 @@ return [
     'deliverText' => 'Deliverable text',
     'deliverableOnly' => 'Save deliverable only',
     'fileOperationsHeading' => 'File operations',
+    'reverseColumns' => 'Reverse columns',
+    'clearDuplicates' => 'Clear duplicates',
 ];

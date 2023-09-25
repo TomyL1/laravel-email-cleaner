@@ -220,6 +220,8 @@ class FileController extends Controller
 
         $selectedColumns = $request->input('columns', []);
         $deleteFirst = $request->has('deleteFirst');
+        $clearDuplicates = $request->has('clearDuplicates');
+        $reverseColumns = $request->has('reverseColumns');
 
         if ($deleteFirst) {
             array_shift($rows);
@@ -234,14 +236,36 @@ class FileController extends Controller
                 $rows[$index] = array_intersect_key($row, array_flip($selectedColumns));
             }
         }
-
         $newContent = '';
+        $uniqueEmails = [];
         foreach ($rows as $row) {
+            if ($clearDuplicates) {
+                $email = $row[0];
+
+                try {
+                    if ($email === '') {
+                        throw new Exception('Email is empty.');
+                    }
+                } catch (Exception $e) {
+                    Log::error('Error getting email: ' . $e->getMessage());
+                    return redirect()->route('view.file', ['file' => $file])->with('error', 'Error getting email. The "Email" column must be the first column in the file.');
+                }
+                if (isset($uniqueEmails[$email])) {
+                    continue;
+                }
+                $uniqueEmails[$email] = true;
+            }
+
+            if ($reverseColumns) {
+                $row = array_reverse($row);
+            }
+
             foreach ($row as &$item) {
                 if (strpos($item, ',') !== false && !preg_match('/^".*"$/', $item)) {
                     $item = '"' . $item . '"';
                 }
             }
+
             $newContent .= implode(',', $row) . "\n";
         }
         file_put_contents($path, $newContent);
