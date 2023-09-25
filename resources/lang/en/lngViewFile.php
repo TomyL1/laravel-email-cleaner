@@ -14,4 +14,9 @@ return [
     'revertFile' => 'Revert file from original',
     'submitToProcess' => 'Submit to process',
     'finalizeFile' => 'Finalize file',
+    'saveDeliverOnlyHeading' => 'Save deliverable only',
+    'index' => 'Index column',
+    'deliverText' => 'Deliverable text',
+    'deliverableOnly' => 'Save deliverable only',
+    'fileOperationsHeading' => 'File operations',
 ];

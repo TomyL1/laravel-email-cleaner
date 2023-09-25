@@ -11,7 +11,26 @@
     </form>
 @endsection
 
+@section ('deliverableOnly')
+    <h4>@lang('lngViewFile.saveDeliverOnlyHeading')</h4>
+    <form action="{{ route('saveDeliverOnly.file', ['file' => $file]) }}" method="POST">
+        @csrf
+        <div class="row">
+            <div class="input-group">
+                <span class="input-group-text">@lang('lngViewFile.index')</span>
+                <input class="form-control" type="text" name="index" value="{{ session('index', '') }}">
+                <span class="input-group-text">@lang('lngViewFile.deliverText')</span>
+                <input class="form-control" type="text" name="deliverText" value="{{ session('deliverText', '') }}">
+            </div>
+            <div class="col-12 d-grid mt-1">
+                <button type="submit" class="btn btn-outline-primary">@lang('lngViewFile.deliverableOnly')</button>
+            </div>
+        </div>
+    </form>
+@endsection
+
 @section ('submitToProcess')
+    <h4>@lang('lngViewFile.fileOperationsHeading')</h4>
     <form action="{{ route('submitToProcess.file', ['file' => $file]) }}" method="POST">
         @csrf
         <div class="row mt-1">
@@ -72,7 +91,13 @@
                 <div class="col-md-4 col-12">
                     @yield('changeEncoding')
                 </div>
-                <div class="col-md-3 offset-md-5 col-12">
+                <div class="col-md-4 col-12">
+                    @if($fileStatus === 'completed')
+                        @yield('deliverableOnly')
+                    @endif
+                </div>
+                <div class="col-md-3 offset-md-1 col-12">
+                    <h4>@lang('lngViewFile.fileOperationsHeading')</h4>
                     @yield('revertFile')
                     @if($fileStatus === 'completed')
                         @yield('finalizeFile')
@@ -87,7 +112,7 @@
 
     <div class="container">
         <div class="row">
-            <div class="col-md-8 col-12">
+            <div class="col-md-8 col-12 mt-4">
                 <h2>@lang('lngViewFile.viewFile')</h2>
             </div>
         </div>
@@ -134,7 +159,7 @@
                                 <th>
                                     <div class="form-check">
                                         <input class="form-check-input" type="checkbox" name="columns[]" value="{{ $index }}" id="delCol_{{ $index }}">
-                                        <label for="delCol_{{ $index }}"></label>
+                                        <label for="delCol_{{ $index }}">#{{ $index }}</label>
                                     </div>
                                 </th>
                             @endforeach

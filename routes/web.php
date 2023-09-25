@@ -57,6 +57,9 @@ Route::post('/finalize-file/{file}', [FileController::class, 'finalizeFile'])->n
 // Delete file
 Route::post('/delete-file/{file}', [FileController::class, 'deleteFile'])->name('delete.file')->middleware('auth');
 
+// Deliverable only
+Route::post('/save-deliver-only/{file}', [FileController::class, 'saveDeliverOnly'])->name('saveDeliverOnly.file')->middleware('auth');
+
 // Cron job
 Route::get('/run-cron', function () {
     $token = request()->get('token');

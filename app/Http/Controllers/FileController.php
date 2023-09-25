@@ -198,6 +198,7 @@ class FileController extends Controller
         $request->session()->put('separator', $separator);
         $rows = $this->parseCsvContent($content, $separator);
         $rows = $this->filterNullRows($rows);
+
         return view('viewFile', ['rows' => $rows, 'file' => $file, 'fileStatus' => $status, 'encoding' => $encoding]);
     }
 
@@ -236,13 +237,50 @@ class FileController extends Controller
 
         $newContent = '';
         foreach ($rows as $row) {
+            foreach ($row as &$item) {
+                if (strpos($item, ',') !== false && !preg_match('/^".*"$/', $item)) {
+                    $item = '"' . $item . '"';
+                }
+            }
             $newContent .= implode(',', $row) . "\n";
         }
-
         file_put_contents($path, $newContent);
 
         return redirect()->route('view.file', ['file' => $file])->with('success', 'File saved successfully.');
     }
+
+    public function saveDeliverOnly($file, Request $request)
+    {
+        $status = $this->checkFileStatus($file);
+
+        if ($status === 'completed') {
+            $path =  $this->checkFileExists($file, 'downloads');
+        }
+        $content = file_get_contents($path);
+        $content = $this->convertEncoding($content, 'UTF-8');
+        $separator = ',';
+        $index = $request->input('index', 0);
+        $deliverText = $request->input('deliverText', 'Deliverable');
+
+        $rows = $this->parseCsvContent($content, $separator);
+        $rows = $this->filterNullRows($rows);
+
+        $newContent = '';
+        foreach ($rows as $row) {
+            if ($row[$index] === $deliverText) {
+                foreach ($row as &$item) {
+                    if (strpos($item, ',') !== false && !preg_match('/^".*"$/', $item)) {
+                        $item = '"' . $item . '"';
+                    }
+                }
+                $newContent .= implode(',', $row) . "\n";
+            }
+        }
+        file_put_contents($path, $newContent);
+
+        return redirect()->route('view.file', ['file' => $file])->with('success', 'File saved successfully.');
+    }
+
     public function finalizeFile($file, Request $request) {
 
         $update = DB::table('processing_statuses')
