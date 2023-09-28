@@ -242,15 +242,7 @@ class FileController extends Controller
             if ($clearDuplicates) {
                 $email = $row[0];
 
-                try {
-                    if ($email === '') {
-                        throw new Exception('Email is empty.');
-                    }
-                } catch (Exception $e) {
-                    Log::error('Error getting email: ' . $e->getMessage());
-                    return redirect()->route('view.file', ['file' => $file])->with('error', 'Error getting email. The "Email" column must be the first column in the file.');
-                }
-                if (isset($uniqueEmails[$email])) {
+                if ($email === '' || isset($uniqueEmails[$email])) {
                     continue;
                 }
                 $uniqueEmails[$email] = true;
