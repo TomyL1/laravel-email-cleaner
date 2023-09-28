@@ -199,3 +199,34 @@
 
     </div>
 @endsection
+
+@section('end-body-scripts')
+    <script>
+        var clearDuplicates = document.getElementById('clearDuplicates');
+
+        clearDuplicates.addEventListener('click', function() {
+            var colInputEls = document.querySelectorAll('input[name="columns[]"]');
+            var deleteFirst = document.getElementById('deleteFirst');
+            var reverseColumns = document.getElementById('reverseColumns');
+
+            if (clearDuplicates.checked) {
+                deleteFirst.checked = false;
+                deleteFirst.disabled = true;
+                reverseColumns.checked = false;
+                reverseColumns.disabled = true;
+
+                for (var i = 0; i < colInputEls.length; i++) {
+                    colInputEls[i].checked = true;
+                    colInputEls[i].disabled = true;
+                }
+            } else {
+                deleteFirst.disabled = false;
+                reverseColumns.disabled = false;
+                for (var j = 0; j < colInputEls.length; j++) {
+                    colInputEls[j].checked = false;
+                    colInputEls[j].disabled = false;
+                }
+            }
+        });
+    </script>
+@endsection
