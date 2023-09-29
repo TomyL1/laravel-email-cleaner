@@ -87,7 +87,7 @@ class FileController extends Controller
         try {
             // Validate the uploaded file
             $validated = $request->validate([
-                'file' => 'required|file|mimes:txt,csv|max:2048',  // This is an example validation. Adjust as necessary.
+                'file' => 'required|file|mimes:txt,csv|max:51200',  // This is an example validation. Adjust as necessary.
             ]);
 
             // Store the uploaded file and get its path
@@ -127,8 +127,6 @@ class FileController extends Controller
             return back()->with('error', 'Error uploading file!');  // Redirect back to the upload form with an error message.
         }
     }
-
-    // FileController.php
 
     private function checkFileExists($fileId, $folder = false) {
         $file = DB::table('cl_upload_files')->where('id', $fileId)->first();
@@ -296,7 +294,52 @@ class FileController extends Controller
 
         return redirect()->route('view.file', ['file' => $file])->with('success', 'File saved successfully.');
     }
+    public function addNames($file, Request $request) {
+        $status = $this->checkFileStatus($file);
 
+        if ($status === 'completed') {
+            $path = $this->checkFileExists($file);
+            $downloadPath = $this->checkFileExists($file, 'downloads');
+        }
+        $originalFileContent = file_get_contents($path);
+        $downloadFileContent = file_get_contents($downloadPath);
+
+        $originalFileContent = $this->convertEncoding($originalFileContent, 'UTF-8');
+        $downloadFileContent = $this->convertEncoding($downloadFileContent, 'UTF-8');
+
+        $separator = ',';
+
+        $originalRows = $this->parseCsvContent($originalFileContent, $separator);
+        $downloadRows = $this->parseCsvContent($downloadFileContent, $separator);
+
+        $originalRows = $this->filterNullRows($originalRows);
+        $downloadRows = $this->filterNullRows($downloadRows);
+
+        $originalEmails = [];
+        foreach ($originalRows as $row) {
+            $email = strtolower($row[0]);
+            $originalEmails[$email] = $row[1];
+        }
+
+        $newContent = '';
+        foreach ($downloadRows as $row) {
+            $email = $row[0];
+            if (isset($originalEmails[$email])) {
+                $row[1] = $originalEmails[$email];
+            } else {
+                $row[1] = '';
+            }
+            foreach ($row as &$item) {
+                if (strpos($item, ',') !== false && !preg_match('/^".*"$/', $item)) {
+                    $item = '"' . $item . '"';
+                }
+            }
+            $newContent .= implode(',', $row) . "\n";
+        }
+        file_put_contents($downloadPath, $newContent);
+
+        return redirect()->route('view.file', ['file' => $file])->with('success', 'File saved successfully.');
+    }
     public function finalizeFile($file, Request $request) {
 
         $update = DB::table('processing_statuses')

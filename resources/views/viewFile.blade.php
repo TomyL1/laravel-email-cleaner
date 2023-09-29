@@ -51,6 +51,18 @@
     </form>
 @endsection
 
+@section('addNames')
+    <form action="{{ route('addNames.file', ['file' => $file]) }}" method="POST">
+        @csrf
+        <div class="row mt-1">
+            <div class="col-12 d-grid">
+                <button type="submit" class="btn btn-success">@lang('lngViewFile.addNames')</button>
+            </div>
+        </div>
+    </form>
+@endsection
+
+
 @section ('changeEncoding')
     <h4>@lang('lngViewFile.changeEncoding')</h4>
     <form action="{{ route('view.file', ['file' => $file]) }}" method="GET">
@@ -99,6 +111,8 @@
                     <h4>@lang('lngViewFile.fileOperationsHeading')</h4>
                     @yield('revertFile')
                     @if($fileStatus === 'completed')
+                        @yield('addNames')
+                    @elseif($fileStatus === 'finalized')
                         @yield('finalizeFile')
                     @else
                         @yield('submitToProcess')
@@ -217,14 +231,12 @@
 
                 for (var i = 0; i < colInputEls.length; i++) {
                     colInputEls[i].checked = true;
-                    colInputEls[i].disabled = true;
                 }
             } else {
                 deleteFirst.disabled = false;
                 reverseColumns.disabled = false;
                 for (var j = 0; j < colInputEls.length; j++) {
                     colInputEls[j].checked = false;
-                    colInputEls[j].disabled = false;
                 }
             }
         });
