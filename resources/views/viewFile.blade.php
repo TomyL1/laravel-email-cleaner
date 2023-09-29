@@ -40,16 +40,6 @@
     </form>
 @endsection
 
-@section('finalizeFile')
-    <form action="{{ route('finalize.file', ['file' => $file]) }}" method="POST">
-        @csrf
-        <div class="row mt-1">
-            <div class="col-12 d-grid">
-                <button type="submit" class="btn btn-success">@lang('lngViewFile.finalizeFile')</button>
-            </div>
-        </div>
-    </form>
-@endsection
 
 @section('addNames')
     <form action="{{ route('addNames.file', ['file' => $file]) }}" method="POST">
@@ -97,6 +87,7 @@
 
 @section('content')
     @if(!empty($rows))
+        @if($fileStatus !== 'download_ready')
         <div class="container">
             <div class="row">
                 <div class="col-md-4 col-12">
@@ -112,15 +103,13 @@
                     @yield('revertFile')
                     @if($fileStatus === 'completed')
                         @yield('addNames')
-                    @elseif($fileStatus === 'finalized')
-                        @yield('finalizeFile')
                     @else
                         @yield('submitToProcess')
                     @endif
-
                 </div>
             </div>
         </div>
+        @endif
     @endif
 
     <div class="container">
@@ -144,6 +133,26 @@
         @endif
 
         @if(!empty($rows))
+            @if($fileStatus === 'download_ready')
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Readonly</h5>
+                    </div>
+                    <div class="card-content">
+                        <table class="table">
+                            <tbody>
+                            @foreach($rows as $row)
+                                <tr>
+                                    @foreach($row as $cell)
+                                        <td>{!! $cell !!}</td>
+                                    @endforeach
+                                </tr>
+                            @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            @else
             <form action="{{ route('save.file', ['file' => $file, 'encoding' => $encoding]) }}" method="POST">
                 <div class="card">
 
@@ -207,6 +216,7 @@
                     </div>
                 </div>
             </form>
+           @endif
         @else
             <p>@lang('lngViewFile.noData')</p>
         @endif

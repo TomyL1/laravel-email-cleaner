@@ -338,15 +338,11 @@ class FileController extends Controller
         }
         file_put_contents($downloadPath, $newContent);
 
-        return redirect()->route('view.file', ['file' => $file])->with('success', 'File saved successfully.');
-    }
-    public function finalizeFile($file, Request $request) {
-
-        $update = DB::table('processing_statuses')
+        DB::table('processing_statuses')
             ->where('file_id', $file)
             ->update(['status' => 'download_ready']);
 
-        return redirect()->route('dashboard')->with('success', 'File finalized successfully.');
+        return redirect()->route('view.file', ['file' => $file])->with('success', 'File saved successfully.');
     }
     public function revertFile($file, Request $request)
     {

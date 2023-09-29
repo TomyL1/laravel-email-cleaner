@@ -21,4 +21,5 @@ return [
     'fileOperationsHeading' => 'File operations',
     'reverseColumns' => 'Reverse columns',
     'clearDuplicates' => 'Clear duplicates',
+    'addNames' => 'Add names and finalize',
 ];
