@@ -334,7 +334,7 @@ class FileController extends Controller
                     $item = '"' . $item . '"';
                 }
             }
-            $newContent .= implode(',', $row) . "\n";
+            $newContent .= implode(';', $row) . "\n";
         }
         file_put_contents($downloadPath, $newContent);
 
