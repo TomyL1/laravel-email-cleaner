@@ -15,7 +15,7 @@
             </div>
         @endif
 
-        <h2>Files Dashboard</h2>
+        <h2>Files Dashboard / Balance: <strong>{{ $balance }}</strong></h2>
         <div class="mt-3 mb-3">
             <div class="form-check mt-2">
                 <input class="form-check-input" type="checkbox" name="enableDelete" value="" id="enableDelete">
@@ -46,7 +46,7 @@
                         @endif
                     </td>
                     <td>{{ $file->message }}</td>
-                    <td>{{ $file->status }}</td>
+                    <td>{{ $file->status }} / <strong>{{ $file->percentage }}</strong></td>
                     <td>
                         @if ($file->status === 'completed')
                             <a class="btn btn-sm btn-outline-secondary" href="{{ route('view.file', ['file' => $file->file_id]) }}">Edit file</a>

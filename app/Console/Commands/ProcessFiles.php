@@ -69,6 +69,10 @@ class ProcessFiles extends Command
                     Log::info("File processing processing" . ' - File_id:' . $file->list_id);
                     $this->info("File processing processing" . ' - File_id:' . $file->list_id);
 
+                    DB::table('processing_statuses')->where('id', $file->id)->update([
+                        'percentage' => json_decode($response->getBody()->getContents())->debounce->percentage,
+                    ]);
+
                 } else {
                     Log::info("Unknown status" . ' - File_id:' . $file->list_id . ' - Response: ' . json_encode($response));
                     $this->info("Unknown status" . ' - File_id:' . $file->list_id . ' - Response: ' . json_encode($response));

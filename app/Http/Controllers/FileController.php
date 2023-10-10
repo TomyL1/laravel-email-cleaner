@@ -17,14 +17,28 @@ class FileController extends Controller
     {
         return view('upload');  // Returns the upload form view.
     }
+    private function debounceAccountBalance() {
+        $client = new \GuzzleHttp\Client();
 
+        $response = $client->request('GET', 'https://api.debounce.io/v1/balance', [
+            'headers' => [
+                'accept' => 'application/json',
+            ],
+            'query' => [
+                'api' => config('services.debounce.api_key'),
+            ]
+        ]);
+
+        return json_decode($response->getBody()->getContents());
+    }
     public function dashboard()
     {
+        $balance = $this->debounceAccountBalance()->balance;
         $files = DB::table('cl_upload_files')
             ->leftJoin('processing_statuses', 'cl_upload_files.id', '=', 'processing_statuses.file_id')
             ->orderBy('cl_upload_files.uploaded_at', 'desc')
             ->paginate(10);
-        return view('dashboard', ['files' => $files]);
+        return view('dashboard', ['files' => $files, 'balance' => $balance]);
     }
 
     public function deleteFile($file) {
