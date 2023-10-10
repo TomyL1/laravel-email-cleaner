@@ -318,7 +318,15 @@ class FileController extends Controller
         $originalEmails = [];
         foreach ($originalRows as $row) {
             $email = strtolower($row[0]);
-            $originalEmails[$email] = $row[1];
+
+            if ($email === '' || isset($originalEmails[$email])) {
+                continue;
+            }
+            if (isset($row[1])) {
+                $originalEmails[$email] = $row[1];
+            } else {
+                $originalEmails[$email] = '';
+            }
         }
 
         $newContent = '';
