@@ -180,6 +180,17 @@ class FileController extends Controller
         });
     }
 
+    private function formatItem(&$item) {
+        $item = trim($item);
+        if (strpos($item, ',') !== false && !preg_match('/^".*"$/', $item)) {
+            $itemInner = trim($item, '"');
+            if (!preg_match('/^[0-9a-zA-Z]/', $itemInner)) {
+                $itemInner = '';
+            }
+            $item = '"' . $itemInner . '"';
+        }
+    }
+
     public function viewFile($file, Request $request)
     {
         $status = $this->checkFileStatus($file);
@@ -251,9 +262,7 @@ class FileController extends Controller
             }
 
             foreach ($row as &$item) {
-                if (strpos($item, ',') !== false && !preg_match('/^".*"$/', $item)) {
-                    $item = '"' . $item . '"';
-                }
+                $this->formatItem($item);
             }
 
             $newContent .= implode(',', $row) . "\n";
@@ -283,9 +292,7 @@ class FileController extends Controller
         foreach ($rows as $row) {
             if ($row[$index] === $deliverText) {
                 foreach ($row as &$item) {
-                    if (strpos($item, ',') !== false && !preg_match('/^".*"$/', $item)) {
-                        $item = '"' . $item . '"';
-                    }
+                    $this->formatItem($item);
                 }
                 $newContent .= implode(',', $row) . "\n";
             }
@@ -338,9 +345,7 @@ class FileController extends Controller
                 $row[1] = '';
             }
             foreach ($row as &$item) {
-                if (strpos($item, ',') !== false && !preg_match('/^".*"$/', $item)) {
-                    $item = '"' . $item . '"';
-                }
+                $this->formatItem($item);
             }
             $newContent .= implode(';', $row) . "\n";
         }
