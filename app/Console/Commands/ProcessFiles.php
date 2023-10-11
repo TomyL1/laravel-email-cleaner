@@ -70,7 +70,7 @@ class ProcessFiles extends Command
                     $this->info("File processing processing" . ' - File_id:' . $file->list_id);
 
                     DB::table('processing_statuses')->where('id', $file->id)->update([
-                        'percentage' => json_decode($response->getBody()->getContents())->debounce->percentage,
+                        'percentage' => $response->debounce->percentage,
                     ]);
 
                 } else {
