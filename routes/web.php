@@ -90,18 +90,7 @@ Route::get('/symlink', function () {
     return response($targetFolder . ' has been symlinked to ' . $linkFolder, 200);
 });
 
-// DB run migrations
-Route::get('/db-migrate', function () {
-    $token = request()->get('token');
 
-    if ($token !== '1f4G7jK9lp3NoPQR56sTuvwxZ78mzy0c') {
-        return response('Invalid token', 403);
-    }
 
-    if (!defined("STDIN")) {
-        define("STDIN", fopen('php://stdin', 'r'));
-    }
 
-    Artisan::call('migrate');
-    return response('DB Migrated Successfully', 200);
-});
+

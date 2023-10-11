@@ -115,7 +115,7 @@
     <div class="container">
         <div class="row">
             <div class="col-md-8 col-12 mt-4">
-                <h2>@lang('lngViewFile.viewFile')</h2>
+                <h2>@lang('lngViewFile.viewFile') / Records: {{ $records }}</h2>
             </div>
         </div>
 

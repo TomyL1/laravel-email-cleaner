@@ -31,6 +31,7 @@ class FileController extends Controller
 
         return json_decode($response->getBody()->getContents());
     }
+
     public function dashboard()
     {
         $balance = $this->debounceAccountBalance()->balance;
@@ -221,8 +222,9 @@ class FileController extends Controller
         $request->session()->put('separator', $separator);
         $rows = $this->parseCsvContent($content, $separator);
         $rows = $this->filterNullRows($rows);
+        $records = count($rows);
 
-        return view('viewFile', ['rows' => $rows, 'file' => $file, 'fileStatus' => $status, 'encoding' => $encoding]);
+        return view('viewFile', ['rows' => $rows, 'records' => $records, 'file' => $file, 'fileStatus' => $status, 'encoding' => $encoding]);
     }
 
     public function saveFile($file, $encoding, Request $request)
