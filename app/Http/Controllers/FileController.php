@@ -210,7 +210,7 @@ class FileController extends Controller
     {
         $status = $this->checkFileStatus($file);
 
-        if ($status === 'completed') {
+        if ($status === 'completed' || $status === 'download_ready') {
             $path = $this->checkFileExists($file, 'downloads');
         } else {
             $path = $this->checkFileExists($file);
