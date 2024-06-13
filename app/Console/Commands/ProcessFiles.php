@@ -176,33 +176,42 @@ class ProcessFiles extends Command
             return;
         }
 
+        // Check if the file has already been sent to DeBounce
+        $alreadyProcessing = DB::table('processing_statuses')
+            ->where('file_id', $nextFile->file_id)
+            ->where('status', 'processing')
+            ->exists();
+
+        if ($alreadyProcessing) {
+            $this->info("File is already being processed. Skipping...");
+            return;
+        }
+
         $responseData = $this->sendToDebounce($nextFile->file_id);
 
         if ($responseData->success == "1" && isset($responseData->debounce->list_id)) {
             DB::table('processing_statuses')->where('id', $nextFile->id)->update([
                 'status' => 'processing',
-                'list_id' => $responseData->debounce->list_id
+                'list_id' => $responseData->debounce->list_id,
+                'updated_at' => now()
             ]);
             Log::info("File sent for processing. Will check status on next run.");
             $this->info("File sent for processing. Will check status on next run.");
         } else {
             if ($responseData->success == "0") {
-
-                if (isset($responseData->debounce->error)) {
-                    $error = $responseData->debounce->error;
-                } else {
-                    $error = "Unknown error";
-                }
+                $error = isset($responseData->debounce->error) ? $responseData->debounce->error : "Unknown error";
 
                 DB::table('processing_statuses')->where('id', $nextFile->id)->update([
                     'status' => 'error',
-                    'response' => $error
+                    'response' => $error,
+                    'updated_at' => now()
                 ]);
                 Log::error("Error sending file to DeBounce: " . $error);
                 $this->error("Error sending file to DeBounce: " . $error);
             }
         }
     }
+
 
     protected function sendToDebounce($fileId)
     {
@@ -236,4 +245,5 @@ class ProcessFiles extends Command
             ];
         }
     }
+
 }

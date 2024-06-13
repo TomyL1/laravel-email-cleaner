@@ -67,7 +67,7 @@ Route::post('/save-deliver-only/{file}', [FileController::class, 'saveDeliverOnl
 Route::get('/run-cron', function () {
     $token = request()->get('token');
 
-    if($token !== '1f4G7jK9lp3NoPQR56sTuvwxZ78mzy0c') {
+    if($token !== '1f4G7jK9lp4NoPQR56sTuvwxZ78mzy0c') {
         return response('Invalid token', 403);
     }
 
