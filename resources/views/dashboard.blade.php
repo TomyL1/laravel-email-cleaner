@@ -66,7 +66,7 @@
             @endforeach
             </tbody>
         </table>
-        {{ $files->links() }} <!-- This will render pagination links -->
+        {{ $files->links('vendor.pagination.bootstrap-4') }} <!-- This will render pagination links -->
     </div>
 
 @endsection

@@ -18,9 +18,9 @@
         <div class="row">
             <div class="input-group">
                 <span class="input-group-text">@lang('lngViewFile.index')</span>
-                <input class="form-control" type="text" name="index" value="{{ session('index', '') }}">
+                <input class="form-control" type="text" name="index" value="{{ session('index', '2') }}">
                 <span class="input-group-text">@lang('lngViewFile.deliverText')</span>
-                <input class="form-control" type="text" name="deliverText" value="{{ session('deliverText', '') }}">
+                <input class="form-control" type="text" name="deliverText" value="{{ session('deliverText', 'Deliverable') }}">
             </div>
             <div class="col-12 d-grid mt-1">
                 <button type="submit" class="btn btn-outline-primary">@lang('lngViewFile.deliverableOnly')</button>
